@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A Protocol for Meta-Analysis with Dependent Effect Sizes</title>
+<style>
+  :root {
+    --accent: #2c3e50;
+    --accent2: #18bc9c;
+    --text: #212529;
+    --muted: #6c757d;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: Lato, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 17px;
+    line-height: 1.6;
+    color: var(--text);
+    background: #fff;
+  }
+  header {
+    background: var(--accent);
+    color: #fff;
+    padding: 3rem 1.5rem 2.5rem;
+    text-align: center;
+  }
+  header h1 { margin: 0 0 0.5rem; font-size: 1.9rem; line-height: 1.3; }
+  header p.subtitle { margin: 0 0 0.25rem; font-size: 1.15rem; opacity: 0.9; }
+  header p.author { margin: 0.75rem 0 0; font-size: 1rem; opacity: 0.8; }
+  main { max-width: 800px; margin: 0 auto; padding: 2rem 1.5rem 3rem; }
+  .buttons { text-align: center; margin: 2rem 0 2.5rem; }
+  .btn {
+    display: inline-block;
+    margin: 0.4rem 0.5rem;
+    padding: 0.75rem 1.6rem;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 1.02rem;
+  }
+  .btn-primary { background: var(--accent2); color: #fff; }
+  .btn-primary:hover { background: #149b80; }
+  .btn-secondary { background: #eef1f4; color: var(--accent); border: 1px solid #d5dbe1; }
+  .btn-secondary:hover { background: #e2e7ec; }
+  h2 { color: var(--accent); margin-top: 2.25rem; font-size: 1.4rem; }
+  .steps { counter-reset: step; padding-left: 0; list-style: none; }
+  .steps li {
+    counter-increment: step;
+    margin: 0.9rem 0;
+    padding-left: 2.6rem;
+    position: relative;
+  }
+  .steps li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0; top: 0.15rem;
+    width: 1.8rem; height: 1.8rem;
+    border-radius: 50%;
+    background: var(--accent2);
+    color: #fff;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1.8rem;
+    font-size: 0.95rem;
+  }
+  code {
+    background: #f2f4f6;
+    padding: 0.1rem 0.35rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+  footer {
+    border-top: 1px solid #e5e8eb;
+    color: var(--muted);
+    text-align: center;
+    padding: 1.5rem;
+    font-size: 0.92rem;
+  }
+  footer a { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>A Protocol for Meta-Analysis with Dependent Effect Sizes</h1>
+  <p class="subtitle">A step-by-step guide using R, from data cleaning to PET-PEESE and Robust Bayesian Meta-Analysis</p>
+  <p class="author">W. Robert Reed &middot; Department of Economics and Finance &amp; UCMeta, University of Canterbury</p>
+</header>
+
+<main>
+
+<div class="buttons">
+  <a class="btn btn-primary" href="protocol.html">Read the protocol</a>
+  <a class="btn btn-secondary" id="zip-link" href="#">Download all files (ZIP)</a>
+  <a class="btn btn-secondary" id="repo-link" href="#">View on GitHub</a>
+</div>
+
+<h2>About this project</h2>
+
+<p>Meta-analyses increasingly confront a challenge that standard methods were not designed to handle: studies that contribute more than one effect size estimate, so that estimates from the same study are statistically dependent. Treating dependent estimates as independent overstates the information in the data and produces standard errors that are too small. This protocol provides a complete, reproducible workflow for conducting a meta-analysis with dependent effect sizes in R.</p>
+
+<p>The protocol proceeds through the full sequence of decisions a researcher faces: cleaning and quality-checking the data, describing the effect size distribution and study weights, choosing the within-study correlation (rho), comparing five estimators of increasing complexity and selecting the correlated-and-hierarchical effects (CHE) model, testing and correcting for publication bias with PET-PEESE together with robustness checks based on alternative weighting and step-function selection models, estimating a full meta-regression, and deriving best-practice effect size predictions. It then extends the entire analysis using Robust Bayesian Meta-Analysis (RoBMA), which corrects for publication bias by averaging over competing models of the selection process, and concludes by comparing what the two approaches imply about the same literature.</p>
+
+<p>Every step is illustrated with real data: the 957 effect sizes from 83 studies analyzed in Xue, Reed, and van Aert (2024, <em>Journal of Economic Surveys</em>), a meta-analysis of the effect of social capital on economic growth. All data, code, and pre-computed results are included in the repository, so the document can be rendered and every table and figure inspected without re-running the long Bayesian estimations.</p>
+
+<h2>How to reproduce the analysis</h2>
+
+<ol class="steps">
+  <li>Download the ZIP file above and unzip it to a folder on your computer.</li>
+  <li>Install R, RStudio, and the required packages listed in the repository README (one <code>install.packages()</code> call plus <code>metaselection</code> from GitHub).</li>
+  <li>Replace the <code>setwd()</code> path at the top of each script (and in the qmd's setup chunk) with your own folder. RStudio's <em>Find in Files</em> does this in one pass; details in the README.</li>
+  <li>Open <code>Protocol_Combined.qmd</code> in RStudio and click <strong>Render</strong> to reproduce the full document from the included outputs, or run each section's <code>source()</code> chunk to regenerate every result from the raw data.</li>
+</ol>
+
+<p>Approximate run times for every script, and guidance on which long-running steps can be skipped by using the included fitted models, are given in the <a id="readme-link" href="#">repository README</a>.</p>
+
+</main>
+
+<footer>
+  Questions and feedback: <a href="mailto:bob.reed@canterbury.ac.nz">bob.reed@canterbury.ac.nz</a>
+</footer>
+
+<script>
+  // Build the GitHub links from the Pages URL (username.github.io/repo/),
+  // so nothing needs hand-editing if the repo is renamed.
+  (function () {
+    var user = location.hostname.split(".")[0];
+    var repo = location.pathname.split("/")[1];
+    if (user && repo) {
+      var base = "https://github.com/" + user + "/" + repo;
+      document.getElementById("repo-link").href = base;
+      document.getElementById("readme-link").href = base + "#readme";
+      document.getElementById("zip-link").href = base + "/archive/refs/heads/main.zip";
+    }
+  })();
+</script>
+
+</body>
+</html>

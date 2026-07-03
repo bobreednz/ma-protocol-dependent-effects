@@ -1,0 +1,13 @@
+# R session artifacts
+.RData
+.Rhistory
+.Rproj.user/
+*.Rproj
+
+# Quarto build artifacts
+/.quarto/
+Protocol_Combined_files/
+
+# OS artifacts
+.DS_Store
+Thumbs.db
