@@ -100,6 +100,18 @@ fmt_se <- function(se) paste0("(", formatC(se, digits = 3, format = "f"), ")")
 # Extract a named row from coef_test() output
 get_row <- function(ct, coef_name) ct[ct$Coef == coef_name, ]
 
+# Format a 95% confidence interval for the intercept ("Effect
+# beyond bias"), using the Satterthwaite df from coef_test() --
+# the same construction used in Table 4 and Table 7, so every
+# confidence interval in the protocol is built the same way.
+fmt_ci <- function(row) {
+  t_crit <- qt(0.975, df = row$df_Satt)
+  lo <- row$beta - t_crit * row$SE
+  hi <- row$beta + t_crit * row$SE
+  paste0("[", formatC(lo, digits = 3, format = "f"), ", ",
+              formatC(hi, digits = 3, format = "f"), "]")
+}
+
 # ============================================================
 # PANEL A: sez only (no control variables)
 #
@@ -157,43 +169,51 @@ lrt_pA_CHE <- anova(pA_CE_ML, pA_CHE_ML)  # CHE vs CE
 # --- Assemble Panel A table ---
 
 panel_A <- tibble(
-  Variable = c("Effect beyond bias", "(SE)", "Bias", "(SE)",
-               "Observations", "Studies",
+  Variable = c("Effect beyond bias", "(SE)", "95% CI", "Bias", "(SE)",
+               "Observations", "Studies", "rho (assumed)",
                "tau", "omega", "LR test"),
 
+  # rho does not apply to FE, RE, or HE (no imputed V matrix)
   FE = c(
     fmt_est(get_row(ct_pA_FE, "intrcpt")$beta,  get_row(ct_pA_FE, "intrcpt")$p_Satt),
     fmt_se( get_row(ct_pA_FE, "intrcpt")$SE),
+    fmt_ci( get_row(ct_pA_FE, "intrcpt")),
     fmt_est(get_row(ct_pA_FE, "sez")$beta,     get_row(ct_pA_FE, "sez")$p_Satt),
     fmt_se( get_row(ct_pA_FE, "sez")$SE),
-    n_obs, n_studies, "--", "--", "--"
+    n_obs, n_studies, "--", "--", "--", "--"
   ),
 
   RE = c(
     fmt_est(get_row(ct_pA_RE, "intrcpt")$beta,  get_row(ct_pA_RE, "intrcpt")$p_Satt),
     fmt_se( get_row(ct_pA_RE, "intrcpt")$SE),
+    fmt_ci( get_row(ct_pA_RE, "intrcpt")),
     fmt_est(get_row(ct_pA_RE, "sez")$beta,     get_row(ct_pA_RE, "sez")$p_Satt),
     fmt_se( get_row(ct_pA_RE, "sez")$SE),
-    n_obs, n_studies,
+    n_obs, n_studies, "--",
     fmt_vc(pA_RE$sigma2), "--",
     fmt_p(lrt_pA_RE$pval)
   ),
 
+  # CE and CHE use the imputed V matrix, so rho is fixed at the
+  # value assumed above, not estimated.
   CE = c(
     fmt_est(get_row(ct_pA_CE, "intrcpt")$beta,  get_row(ct_pA_CE, "intrcpt")$p_Satt),
     fmt_se( get_row(ct_pA_CE, "intrcpt")$SE),
+    fmt_ci( get_row(ct_pA_CE, "intrcpt")),
     fmt_est(get_row(ct_pA_CE, "sez")$beta,     get_row(ct_pA_CE, "sez")$p_Satt),
     fmt_se( get_row(ct_pA_CE, "sez")$SE),
     n_obs, n_studies,
+    formatC(rho, digits = 3, format = "f"),
     fmt_vc(pA_CE$sigma2), "--", "--"
   ),
 
   HE = c(
     fmt_est(get_row(ct_pA_HE, "intrcpt")$beta,  get_row(ct_pA_HE, "intrcpt")$p_Satt),
     fmt_se( get_row(ct_pA_HE, "intrcpt")$SE),
+    fmt_ci( get_row(ct_pA_HE, "intrcpt")),
     fmt_est(get_row(ct_pA_HE, "sez")$beta,     get_row(ct_pA_HE, "sez")$p_Satt),
     fmt_se( get_row(ct_pA_HE, "sez")$SE),
-    n_obs, n_studies,
+    n_obs, n_studies, "--",
     fmt_vc(pA_HE$sigma2[1]), fmt_vc(pA_HE$sigma2[2]),
     fmt_p(lrt_pA_HE$pval)
   ),
@@ -201,9 +221,11 @@ panel_A <- tibble(
   CHE = c(
     fmt_est(get_row(ct_pA_CHE, "intrcpt")$beta,  get_row(ct_pA_CHE, "intrcpt")$p_Satt),
     fmt_se( get_row(ct_pA_CHE, "intrcpt")$SE),
+    fmt_ci( get_row(ct_pA_CHE, "intrcpt")),
     fmt_est(get_row(ct_pA_CHE, "sez")$beta,     get_row(ct_pA_CHE, "sez")$p_Satt),
     fmt_se( get_row(ct_pA_CHE, "sez")$SE),
     n_obs, n_studies,
+    formatC(rho, digits = 3, format = "f"),
     fmt_vc(pA_CHE$sigma2[1]), fmt_vc(pA_CHE$sigma2[2]),
     fmt_p(lrt_pA_CHE$pval)
   )
@@ -271,24 +293,26 @@ lrt_pB_CHE <- anova(pB_CE_ML, pB_CHE_ML)  # CHE vs CE
 # --- Assemble Panel B table ---
 
 panel_B <- tibble(
-  Variable = c("Effect beyond bias", "(SE)", "Bias", "(SE)",
-               "Observations", "Studies",
+  Variable = c("Effect beyond bias", "(SE)", "95% CI", "Bias", "(SE)",
+               "Observations", "Studies", "rho (assumed)",
                "tau", "omega", "LR test"),
 
   FE = c(
     fmt_est(get_row(ct_pB_FE, "intrcpt")$beta,  get_row(ct_pB_FE, "intrcpt")$p_Satt),
     fmt_se( get_row(ct_pB_FE, "intrcpt")$SE),
+    fmt_ci( get_row(ct_pB_FE, "intrcpt")),
     fmt_est(get_row(ct_pB_FE, "sez")$beta,     get_row(ct_pB_FE, "sez")$p_Satt),
     fmt_se( get_row(ct_pB_FE, "sez")$SE),
-    n_obs, n_studies, "--", "--", "--"
+    n_obs, n_studies, "--", "--", "--", "--"
   ),
 
   RE = c(
     fmt_est(get_row(ct_pB_RE, "intrcpt")$beta,  get_row(ct_pB_RE, "intrcpt")$p_Satt),
     fmt_se( get_row(ct_pB_RE, "intrcpt")$SE),
+    fmt_ci( get_row(ct_pB_RE, "intrcpt")),
     fmt_est(get_row(ct_pB_RE, "sez")$beta,     get_row(ct_pB_RE, "sez")$p_Satt),
     fmt_se( get_row(ct_pB_RE, "sez")$SE),
-    n_obs, n_studies,
+    n_obs, n_studies, "--",
     fmt_vc(pB_RE$sigma2), "--",
     fmt_p(lrt_pB_RE$pval)
   ),
@@ -296,48 +320,17 @@ panel_B <- tibble(
   CE = c(
     fmt_est(get_row(ct_pB_CE, "intrcpt")$beta,  get_row(ct_pB_CE, "intrcpt")$p_Satt),
     fmt_se( get_row(ct_pB_CE, "intrcpt")$SE),
+    fmt_ci( get_row(ct_pB_CE, "intrcpt")),
     fmt_est(get_row(ct_pB_CE, "sez")$beta,     get_row(ct_pB_CE, "sez")$p_Satt),
     fmt_se( get_row(ct_pB_CE, "sez")$SE),
     n_obs, n_studies,
+    formatC(rho, digits = 3, format = "f"),
     fmt_vc(pB_CE$sigma2), "--", "--"
   ),
 
   HE = c(
     fmt_est(get_row(ct_pB_HE, "intrcpt")$beta,  get_row(ct_pB_HE, "intrcpt")$p_Satt),
     fmt_se( get_row(ct_pB_HE, "intrcpt")$SE),
+    fmt_ci( get_row(ct_pB_HE, "intrcpt")),
     fmt_est(get_row(ct_pB_HE, "sez")$beta,     get_row(ct_pB_HE, "sez")$p_Satt),
-    fmt_se( get_row(ct_pB_HE, "sez")$SE),
-    n_obs, n_studies,
-    fmt_vc(pB_HE$sigma2[1]), fmt_vc(pB_HE$sigma2[2]),
-    fmt_p(lrt_pB_HE$pval)
-  ),
-
-  CHE = c(
-    fmt_est(get_row(ct_pB_CHE, "intrcpt")$beta,  get_row(ct_pB_CHE, "intrcpt")$p_Satt),
-    fmt_se( get_row(ct_pB_CHE, "intrcpt")$SE),
-    fmt_est(get_row(ct_pB_CHE, "sez")$beta,     get_row(ct_pB_CHE, "sez")$p_Satt),
-    fmt_se( get_row(ct_pB_CHE, "sez")$SE),
-    n_obs, n_studies,
-    fmt_vc(pB_CHE$sigma2[1]), fmt_vc(pB_CHE$sigma2[2]),
-    fmt_p(lrt_pB_CHE$pval)
-  )
-)
-
-# ============================================================
-# Export both panels to Excel (one sheet each)
-# ============================================================
-
-write_xlsx(
-  list(
-    "Panel A - No controls"   = panel_A,
-    "Panel B - Full controls" = panel_B
-  ),
-  "Table5_Protocol.xlsx"
-)
-
-cat("Done. Output saved to Table5_Protocol.xlsx\n")
-
-# ── Run time ──────────────────────────────────────────────────────────────────────────────
-elapsed <- proc.time() - start_time
-cat(sprintf("\nTotal run time: %.1f seconds (%.1f minutes).\n",
-            elapsed["elapsed"], elapsed["elapsed"] / 60))
+    fmt_se( get_row(ct_pB_HE, "sez")$SE

@@ -171,4 +171,4 @@ total_time <- proc.time() - start_time
 cat(sprintf("\nTotal run time: %.1f seconds (%.1f hours)\n",
             total_time["elapsed"], total_time["elapsed"] / 3600))
 
-cat("\nProtocol_Table10.R complete. Proceed to Protocol_Table11.R for best
+cat("\nProtocol_Table10.R complete. Proceed to Protocol_Table11.R for best-practice predictions.\n")

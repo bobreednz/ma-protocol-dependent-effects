@@ -138,4 +138,6 @@ addWorksheet(wb, "BayesFactors")
 writeData(wb, "BayesFactors", bf_table)
 
 saveWorkbook(wb, "Table8_RoBMA_Comparison.xlsx", overwrite = TRUE)
-cat("Table saved to Table8_RoBMA_Comparison.xlsx (two sheets)\
+cat("Table saved to Table8_RoBMA_Comparison.xlsx (two sheets)\n")
+
+cat("\nProtocol_Table8.R complete.\n")

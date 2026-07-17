@@ -199,6 +199,18 @@ fmt_se <- function(ct) {
   paste0("(", formatC(ct$SE, digits = 3, format = "f"), ")")
 }
 
+# Format a 95% confidence interval, using the Satterthwaite df
+# from coef_test() -- the same construction used for the
+# best-practice intervals in Table 7, so that every confidence
+# interval in the protocol is built the same way.
+fmt_ci <- function(ct) {
+  t_crit <- qt(0.975, df = ct$df_Satt)
+  lo <- ct$beta - t_crit * ct$SE
+  hi <- ct$beta + t_crit * ct$SE
+  paste0("[", formatC(lo, digits = 3, format = "f"), ", ",
+              formatC(hi, digits = 3, format = "f"), "]")
+}
+
 # ============================================================
 # Extract LR test p-values
 # ============================================================
@@ -212,77 +224,75 @@ p_lrt_CHE <- fmt_p(lrt_CHE$pval)
 # ============================================================
 
 table_out <- tibble(
-  Variable = c("Constant", "(SE)", "Observations", "Studies",
-               "tau", "omega", "LR test"),
+  Variable = c("Constant", "(SE)", "95% CI", "Observations", "Studies",
+               "rho (assumed)", "tau", "omega", "LR test"),
 
-  # FE: no random effects, so no variance components or LR test
+  # FE: no random effects, so no variance components or LR test;
+  # rho is not used (no imputed V matrix)
   FE = c(
     fmt_est(ct_FE),
     fmt_se(ct_FE),
+    fmt_ci(ct_FE),
     n_obs,
     n_studies,
+    "--",
     "--",
     "--",
     "--"
   ),
 
-  # RE: one variance component (tau); LR test vs FE
+  # RE: one variance component (tau); LR test vs FE;
+  # rho is not used (no imputed V matrix)
   RE = c(
     fmt_est(ct_RE),
     fmt_se(ct_RE),
+    fmt_ci(ct_RE),
     n_obs,
     n_studies,
+    "--",
     fmt_vc(model_RE$sigma2),
     "--",
     p_lrt_RE
   ),
 
   # CE: one between-study variance component (tau) + imputed V;
+  # rho is fixed at the value assumed above, not estimated;
   # no LR test (not nested with RE or HE)
   CE = c(
     fmt_est(ct_CE),
     fmt_se(ct_CE),
+    fmt_ci(ct_CE),
     n_obs,
     n_studies,
+    formatC(rho, digits = 3, format = "f"),
     fmt_vc(model_CE$sigma2),
     "--",
     "--"
   ),
 
-  # HE: two variance components (tau, omega); LR test vs RE
+  # HE: two variance components (tau, omega); LR test vs RE;
+  # rho is not used (no imputed V matrix)
   HE = c(
     fmt_est(ct_HE),
     fmt_se(ct_HE),
+    fmt_ci(ct_HE),
     n_obs,
     n_studies,
+    "--",
     fmt_vc(model_HE$sigma2[1]),
     fmt_vc(model_HE$sigma2[2]),
     p_lrt_HE
   ),
 
   # CHE: two variance components (tau, omega) + imputed V;
+  # rho is fixed at the value assumed above, not estimated;
   # LR test vs CE
   CHE = c(
     fmt_est(ct_CHE),
     fmt_se(ct_CHE),
+    fmt_ci(ct_CHE),
     n_obs,
     n_studies,
+    formatC(rho, digits = 3, format = "f"),
     fmt_vc(model_CHE$sigma2[1]),
-    fmt_vc(model_CHE$sigma2[2]),
-    p_lrt_CHE
-  )
-)
-
-# ============================================================
-# Export to Excel
-# ============================================================
-
-write_xlsx(table_out, "Table4_Protocol.xlsx")
-
-cat("Done. Output saved to Table4_Protocol.xlsx\n")
-
-# ── Run time ──────────────────────────────────────────────────────────────────────────────
-elapsed <- proc.time() - start_time
-cat(sprintf("\nTotal run time: %.1f seconds (%.1f minutes).\n",
-            elapsed["elapsed"], elapsed["elapsed"] / 60))
-                                                                                                                                
+    fmt

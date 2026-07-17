@@ -4,7 +4,7 @@
 # Purpose: Full meta-regression with all 19 regressors (sez + 18 study
 # characteristics), combining Bayesian Model Averaging (BMA) and a full
 # correlated-and-hierarchical effects (CHE) model. Replicates Table 10 in
-# Xue et al. (2024), replacing the OLS full-model columns with CHE estimates.
+# Xue et al. (2025), replacing the OLS full-model columns with CHE estimates.
 #
 # Table structure:
 #   Panel A -- Estimates (7 columns):
@@ -56,6 +56,11 @@
 # =============================================================================
 
 # -- Packages -----------------------------------------------------------------
+
+packages <- c("metafor", "clubSandwich", "tidyverse", "openxlsx", "BMS")
+
+installed <- packages %in% installed.packages()[, "Package"]
+if (any(!installed)) install.packages(packages[!installed])
 
 library(metafor)       # rma.mv() for CHE meta-regression
 library(clubSandwich)  # coef_test() for CR2 standard errors
@@ -154,10 +159,12 @@ cat(sprintf("  Variables with PIP > 0.50: %d\n",
 
 # -- 2a. Block-diagonal covariance matrix (rho = 0.5) ------------------------
 
+rho <- 0.5
+
 V_mat <- vcalc(
   vi      = dat$sez^2,
   cluster = dat$newid,
-  rho     = 0.5
+  rho     = rho
 )
 
 # -- 2b. Build the moderator formula -----------------------------------------
@@ -430,15 +437,17 @@ n_studies <- length(unique(dat$newid))
 tau_val   <- sqrt(che_full$sigma2[1])
 omega_val <- sqrt(che_full$sigma2[2])
 
-writeData(wb, "Panel A", "Observations", startRow = r,     startCol = 1)
-writeData(wb, "Panel A", n_obs,          startRow = r,     startCol = 5)
-writeData(wb, "Panel A", "Studies",      startRow = r + 1, startCol = 1)
-writeData(wb, "Panel A", n_studies,      startRow = r + 1, startCol = 5)
-writeData(wb, "Panel A", "tau",          startRow = r + 2, startCol = 1)
-writeData(wb, "Panel A", fmt3(tau_val),  startRow = r + 2, startCol = 5)
-writeData(wb, "Panel A", "omega",        startRow = r + 3, startCol = 1)
-writeData(wb, "Panel A", fmt3(omega_val),startRow = r + 3, startCol = 5)
-r <- r + 5  # 4 footer rows + 1 blank
+writeData(wb, "Panel A", "Observations",   startRow = r,     startCol = 1)
+writeData(wb, "Panel A", n_obs,            startRow = r,     startCol = 5)
+writeData(wb, "Panel A", "Studies",        startRow = r + 1, startCol = 1)
+writeData(wb, "Panel A", n_studies,        startRow = r + 1, startCol = 5)
+writeData(wb, "Panel A", "rho (assumed)",  startRow = r + 2, startCol = 1)
+writeData(wb, "Panel A", fmt3(rho),        startRow = r + 2, startCol = 5)
+writeData(wb, "Panel A", "tau",            startRow = r + 3, startCol = 1)
+writeData(wb, "Panel A", fmt3(tau_val),    startRow = r + 3, startCol = 5)
+writeData(wb, "Panel A", "omega",          startRow = r + 4, startCol = 1)
+writeData(wb, "Panel A", fmt3(omega_val),  startRow = r + 4, startCol = 5)
+r <- r + 6  # 5 footer rows + 1 blank
 
 # Notes
 notes_a <- c(
@@ -495,14 +504,4 @@ setColWidths(wb, "Panel B", cols = 1:2, widths = c(28, 60))
 
 # =============================================================================
 # Save
-# =============================================================================
-
-saveWorkbook(wb, "Table6_Protocol.xlsx", overwrite = TRUE)
-
-cat("\nTable6_Protocol.xlsx saved (two sheets: Panel A, Panel B).\n")
-
-# -- Run time -----------------------------------------------------------------
-
-elapsed <- proc.time() - start_time
-cat(sprintf("\nTotal run time: %.1f seconds.\n", elapsed["elapsed"]))
-                
+# ========================

@@ -21,20 +21,25 @@
 # The rho that maximises the REML log-likelihood is the best-fitting choice
 # given the data.
 #
-# Two figures are produced:
-#   Figure_RhoLikelihood.png  -- REML log-likelihood vs rho
-#   Figure_RhoIntercept.png   -- CHE intercept (with 95% CI band) vs rho
+# Three figures are produced:
+#   Figure_RhoLikelihood.png         -- REML log-likelihood vs rho
+#   Figure_RhoIntercept.png          -- CHE intercept (with 95% CI band) vs rho
+#   Figure_RhoVarianceComponents.png -- tau and omega (variance components) vs rho
 #
-# Both figures include a vertical dashed line at rho = 0.5 (the protocol
-# assumption) and a vertical solid line at the rho that maximises the
+# The first two figures include a vertical dashed line at rho = 0.5 (the
+# protocol assumption) and a vertical solid line at the rho that maximises the
 # log-likelihood, so the reader can see at a glance whether the assumed value
 # is close to optimal and whether the intercept estimate is sensitive to the
-# choice.
+# choice. The third figure includes the same rho = 0.5 reference line.
 #
 # Output:
-#   Table_RhoSensitivity.xlsx   -- full results for every rho on the grid
+#   Table_RhoSensitivity.xlsx        -- full results for every rho on the grid
+#                                        (retained for verification; not
+#                                        displayed in the rendered protocol,
+#                                        which shows the three figures instead)
 #   Figure_RhoLikelihood.png
 #   Figure_RhoIntercept.png
+#   Figure_RhoVarianceComponents.png
 # =============================================================================
 
 # ── Packages ──────────────────────────────────────────────────────────────────
@@ -295,41 +300,13 @@ ggsave(
 cat("Figure_RhoIntercept.png saved.\n")
 
 # =============================================================================
-# Results table
+# Figure: Variance components (tau and omega) vs rho (Figure_RhoVarianceComponents.png)
 # =============================================================================
-
-tbl <- results %>%
-  mutate(
-    best_fit = rho == best_rho,
-    across(c(logLik, intercept, se, tau, omega), ~ round(.x, 4))
-  ) %>%
-  rename(
-    `Rho`           = rho,
-    `REML logLik`   = logLik,
-    `Intercept`     = intercept,
-    `SE (CR2)`      = se,
-    `Tau`           = tau,
-    `Omega`         = omega,
-    `Best fit`      = best_fit
-  )
-
-write_xlsx(
-  list("Rho sensitivity" = tbl),
-  path = "Table_RhoSensitivity.xlsx"
-)
-cat("Table_RhoSensitivity.xlsx saved.\n")
-
-cat("\nDone. Summary:\n")
-cat(sprintf("  Best rho:             %.2f\n", best_rho))
-cat(sprintf("  Intercept at rho=0.5: %.4f (SE = %.4f)\n",
-            results$intercept[results$rho == 0.50],
-            results$se[results$rho == 0.50]))
-cat(sprintf("  Intercept at best rho:%.4f (SE = %.4f)\n",
-            results$intercept[best_idx],
-            results$se[best_idx]))
-
-# ── Run time ──────────────────────────────────────────────────────────────────────────────
-elapsed <- proc.time() - start_time
-cat(sprintf("\nTotal run time: %.1f seconds (%.1f minutes).\n",
-            elapsed["elapsed"], elapsed["elapsed"] / 60))
-              
+#
+# Tau (between-study SD) and omega (within-study SD) are not shown in either
+# figure above, so they are plotted together here. As rho increases, more of
+# the observed similarity among a study's effect sizes is attributed to
+# correlated sampling error rather than to a shared study-level true effect,
+# so heterogeneity is mechanically reallocated away from the between-study
+# component (tau) and toward the within-study component (omega). Reshape to
+# long format so both series share one legend.

@@ -303,4 +303,3 @@ cat("Table 3 saved to Table3_Protocol.xlsx\n")
 elapsed <- proc.time() - start_time
 cat(sprintf("\nTotal run time: %.1f seconds (%.1f minutes).\n",
             elapsed["elapsed"], elapsed["elapsed"] / 60))
-                                                                                                                                                                         

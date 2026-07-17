@@ -350,4 +350,6 @@ cat("  Figure_Jackknife_CHE.png\n")
 cat("  Table_Jackknife_CHE.xlsx\n")
 
 # ── Run time ──────────────────────────────────────────────────────────────────────────────
-elapsed <- proc.time() - sta
+elapsed <- proc.time() - start_time
+cat(sprintf("\nTotal run time: %.1f seconds (%.1f minutes).\n",
+            elapsed["elapsed"], elapsed["elapsed"] / 60))

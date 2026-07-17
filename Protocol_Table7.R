@@ -42,7 +42,7 @@ V_mat <- vcalc(
 #
 # "Best practice" means methodologically ideal study
 # characteristics. Following Table 11 of Xue, Reed, and van
-# Aert (2024), the best practice study:
+# Aert (2025), the best practice study:
 #
 #   - Reports effects for economic growth rates (not GDP levels)
 #   - Uses cognitive social capital
@@ -325,7 +325,9 @@ bp_note <- function(Reg_OECDEurope_bp) {
     "SC1_Other = 0 (reference), DV_GrowthRate = 1, DV_GDPLevel = 0 (reference), PubYear = ",
     round(bp_PubYear, 1), " (sample mean), Published = 1, LaggedDV = 0, LaggedSC = 0, NumberSCVars = ",
     bp_NumberSCVars, ", Endog_IV = 1, Endog_FE = 1, CityLevel = 0, RegionLevel = 0, CountryLevel = 1, ",
-    "PanelData = 1, Reg_OECDEurope = ", Reg_OECDEurope_bp, ", Reg_US = 0, Reg_Africa = 0, Reg_Asia = 0."
+    "PanelData = 1, Reg_OECDEurope = ", Reg_OECDEurope_bp, ", Reg_US = 0, Reg_Africa = 0, Reg_Asia = 0. ",
+    "The covariance matrix used to fit this model assumes a within-study correlation of rho = ",
+    formatC(rho, digits = 3, format = "f"), " (Section 4)."
   )
 }
 
@@ -355,7 +357,4 @@ write_xlsx(
 
 cat("Done. Output saved to Table7_Protocol.xlsx\n")
 
-# -- Run time ------------------------------------------------------------------
-elapsed <- proc.time() - start_time
-cat(sprintf("\nTotal run time: %.1f seconds (%.1f minutes).\n",
-            elapsed["elapsed"], elapsed["elapsed"] / 60))
+# -- Run time ------------------------------------------------------------------

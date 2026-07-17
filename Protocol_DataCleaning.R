@@ -563,7 +563,7 @@ write_dta(DT, "SCData_flagged.dta")
 # --- Save processed dataset ---
 # For this protocol, the processed dataset is identical to the raw data:
 # no flagged observations are dropped, in order to maintain comparability
-# with Xue, Reed, and van Aert (2024). In your own work, inspect
+# with Xue, Reed, and van Aert (2025). In your own work, inspect
 # DataCleaning_Report.xlsx, decide which flagged observations to drop or
 # revise, make those changes to DT, and then save the result here.
 # Keep a log file documenting every change made and the reason for it.
@@ -581,4 +581,4 @@ cat("==========================================================\n")
 # ── Run time ──────────────────────────────────────────────────────────────────
 elapsed <- proc.time() - start_time
 cat(sprintf("\nTotal run time: %.1f seconds (%.1f minutes).\n",
-        
+            elapsed["elapsed"], elapsed["el

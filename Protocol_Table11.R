@@ -12,7 +12,7 @@ fit <- readRDS("RoBMA_metaregression.rds")
 cat("Model loaded.\n\n")
 
 # ---- BEST-PRACTICE COVARIATE VALUES ----
-# Following Part 1 (Table 7) and Xue, Reed, and van Aert (2024), the
+# Following Part 1 (Table 7) and Xue, Reed, and van Aert (2025), the
 # best-practice study uses cognitive social capital, no lagged DV, one social
 # capital variable, and fixed effects for endogeneity. sez and PubYear are not
 # in the model (RoBMA corrects for publication bias internally; PubYear was not
@@ -167,4 +167,4 @@ cat("\nResults saved to Table11_RoBMA_BestPractice.xlsx\n")
 # ---- OVERALL RUN TIME ----
 total_time <- proc.time() - start_time
 cat(sprintf("\nTotal run time: %.1f seconds\n", total_time["elapsed"]))
-cat("\nProtocol_Tabl
+cat("\nProtocol_Table11.R complete.\n")

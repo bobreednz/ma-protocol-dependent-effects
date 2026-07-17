@@ -65,4 +65,4 @@ time_png <- system.time({
 cat("PNG save time (seconds):\n")
 print(time_png)
 
-c
+cat("Protocol_Figure3.R complete.\n")
