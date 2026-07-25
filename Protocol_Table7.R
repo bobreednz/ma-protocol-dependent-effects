@@ -1,5 +1,3 @@
-setwd("C:/PROTOCOL OF MAs WITH DEPENDENT DATA")
-
 # Record start time -- printed at the end so run time can be documented.
 start_time <- proc.time()
 
@@ -7,11 +5,12 @@ start_time <- proc.time()
 # Install and load required packages
 # ============================================================
 
-packages <- c("metafor", "clubSandwich", "tidyverse", "writexl")
+packages <- c("here", "metafor", "clubSandwich", "tidyverse", "writexl")
 
 installed <- packages %in% installed.packages()[, "Package"]
 if (any(!installed)) install.packages(packages[!installed])
 
+library(here)           # resolves file paths relative to the project root (.Rproj)
 library(metafor)       # meta-analytic models via rma.mv()
 library(clubSandwich)  # CR2 clustered standard errors
 library(tidyverse)     # data manipulation
@@ -21,7 +20,7 @@ library(writexl)       # export to Excel
 # Load data
 # ============================================================
 
-DT <- readRDS("SCData_processed.rds")
+DT <- readRDS(here("SCData_processed.rds"))
 
 # ============================================================
 # Impute block-diagonal covariance matrix (for CHE)
@@ -352,9 +351,12 @@ write_xlsx(
     "BP2 - OECD Europe"     = panel_bp2,
     "Notes"                 = notes_sheet
   ),
-  "Table7_Protocol.xlsx"
+  here("Table7_Protocol.xlsx")
 )
 
 cat("Done. Output saved to Table7_Protocol.xlsx\n")
 
-# -- Run time ------------------------------------------------------------------
+# -- Run time ------------------------------------------------------------------
+elapsed <- proc.time() - start_time
+cat(sprintf("\nTotal run time: %.1f seconds (%.1f minutes).\n",
+            elapsed["elapsed"], elapsed["elapsed"] / 60))

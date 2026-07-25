@@ -1,5 +1,3 @@
-setwd("C:/PROTOCOL OF MAs WITH DEPENDENT DATA")
-
 # Record start time -- printed at the end so run time can be documented.
 start_time <- proc.time()
 
@@ -7,11 +5,12 @@ start_time <- proc.time()
 # Install and load required packages
 # ============================================================
 
-packages <- c("metafor", "clubSandwich", "tidyverse", "writexl")
+packages <- c("here", "metafor", "clubSandwich", "tidyverse", "writexl")
 
 installed <- packages %in% installed.packages()[, "Package"]
 if (any(!installed)) install.packages(packages[!installed])
 
+library(here)           # resolves file paths relative to the project root (.Rproj)
 library(metafor)       # meta-analytic models via rma.mv()
 library(clubSandwich)  # CR2 clustered standard errors
 library(tidyverse)     # data manipulation
@@ -21,7 +20,7 @@ library(writexl)       # export to Excel
 # Load data
 # ============================================================
 
-DT <- readRDS("SCData_processed.rds")
+DT <- readRDS(here("SCData_processed.rds"))
 
 n_obs     <- nrow(DT)
 n_studies <- length(unique(DT$newid))
@@ -333,4 +332,40 @@ panel_B <- tibble(
     fmt_se( get_row(ct_pB_HE, "intrcpt")$SE),
     fmt_ci( get_row(ct_pB_HE, "intrcpt")),
     fmt_est(get_row(ct_pB_HE, "sez")$beta,     get_row(ct_pB_HE, "sez")$p_Satt),
-    fmt_se( get_row(ct_pB_HE, "sez")$SE
+    fmt_se( get_row(ct_pB_HE, "sez")$SE),
+    n_obs, n_studies, "--",
+    fmt_vc(pB_HE$sigma2[1]), fmt_vc(pB_HE$sigma2[2]),
+    fmt_p(lrt_pB_HE$pval)
+  ),
+
+  CHE = c(
+    fmt_est(get_row(ct_pB_CHE, "intrcpt")$beta,  get_row(ct_pB_CHE, "intrcpt")$p_Satt),
+    fmt_se( get_row(ct_pB_CHE, "intrcpt")$SE),
+    fmt_ci( get_row(ct_pB_CHE, "intrcpt")),
+    fmt_est(get_row(ct_pB_CHE, "sez")$beta,     get_row(ct_pB_CHE, "sez")$p_Satt),
+    fmt_se( get_row(ct_pB_CHE, "sez")$SE),
+    n_obs, n_studies,
+    formatC(rho, digits = 3, format = "f"),
+    fmt_vc(pB_CHE$sigma2[1]), fmt_vc(pB_CHE$sigma2[2]),
+    fmt_p(lrt_pB_CHE$pval)
+  )
+)
+
+# ============================================================
+# Export both panels to Excel (one sheet each)
+# ============================================================
+
+write_xlsx(
+  list(
+    "Panel A - No controls"   = panel_A,
+    "Panel B - Full controls" = panel_B
+  ),
+  here("Table5_Protocol.xlsx")
+)
+
+cat("Done. Output saved to Table5_Protocol.xlsx\n")
+
+# ── Run time ──────────────────────────────────────────────────────────────────────────────
+elapsed <- proc.time() - start_time
+cat(sprintf("\nTotal run time: %.1f seconds (%.1f minutes).\n",
+            elapsed["elapsed"], elapsed["elapsed"] / 60))

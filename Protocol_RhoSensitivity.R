@@ -1,62 +1,56 @@
 # =============================================================================
 # Protocol_RhoSensitivity.R
 # =============================================================================
-# Purpose: Choose the within-study correlation rho for the imputed
-# block-diagonal covariance matrix.
+# Purpose: Assess the sensitivity of the CHE results to the assumed
+# within-study sampling correlation rho.
 #
 # Throughout the protocol, V_mat is built by vcalc() with an assumed
-# within-study correlation rho = 0.5. This assumption is not
-# identified from the data in the usual sense -- the true within-study
-# correlations are not observed -- but we can still ask: for what value of rho
-# does the CHE model fit the data best?
+# within-study correlation rho = 0.5. This value is not identified from the
+# data: the true within-study correlations are not observed, and rho enters the
+# assumed sampling-covariance matrix rather than the random-effects model. It
+# therefore cannot be selected by the likelihood or by any other model-
+# comparison criterion, because different values of rho correspond to different
+# assumed data rather than to competing models fit to the same data. The
+# appropriate check is instead a sensitivity analysis: assume rho = 0.5, then
+# confirm that the substantive conclusions do not depend on that choice.
 #
-# The approach is a profile REML likelihood over rho. For each candidate rho:
+# For each candidate rho on a grid:
 #   1. Build V_mat with that rho.
 #   2. Fit the intercept-only CHE model by REML, which estimates tau^2 and
 #      omega^2 at that fixed rho.
-#   3. Record the REML log-likelihood.
+#   3. Record the CHE intercept, its CR2 standard error, and tau and omega.
 #
-# Because the fixed effects structure is the same in every model (intercept
-# only), the REML log-likelihoods are directly comparable across rho values.
-# The rho that maximises the REML log-likelihood is the best-fitting choice
-# given the data.
-#
-# Three figures are produced:
-#   Figure_RhoLikelihood.png         -- REML log-likelihood vs rho
+# Two figures are produced:
 #   Figure_RhoIntercept.png          -- CHE intercept (with 95% CI band) vs rho
 #   Figure_RhoVarianceComponents.png -- tau and omega (variance components) vs rho
 #
-# The first two figures include a vertical dashed line at rho = 0.5 (the
-# protocol assumption) and a vertical solid line at the rho that maximises the
-# log-likelihood, so the reader can see at a glance whether the assumed value
-# is close to optimal and whether the intercept estimate is sensitive to the
-# choice. The third figure includes the same rho = 0.5 reference line.
+# Both figures include a vertical dashed line at rho = 0.5 (the protocol
+# assumption) so the reader can see at a glance whether the intercept and the
+# variance components are sensitive to the choice of rho.
 #
 # Output:
 #   Table_RhoSensitivity.xlsx        -- full results for every rho on the grid
 #                                        (retained for verification; not
 #                                        displayed in the rendered protocol,
-#                                        which shows the three figures instead)
-#   Figure_RhoLikelihood.png
+#                                        which shows the two figures instead)
 #   Figure_RhoIntercept.png
 #   Figure_RhoVarianceComponents.png
 # =============================================================================
 
-# ── Packages ──────────────────────────────────────────────────────────────────
+# -- Packages ------------------------------------------------------------------
 
+library(here)           # resolves file paths relative to the project root (.Rproj)
 library(metafor)       # rma.mv() and vcalc()
 library(clubSandwich)  # coef_test() for CR2 standard errors
 library(tidyverse)     # ggplot2 and data manipulation
 library(writexl)       # write_xlsx()
 
-setwd("C:/PROTOCOL OF MAs WITH DEPENDENT DATA")
-
 # Record start time -- printed at the end so run time can be documented.
 start_time <- proc.time()
 
-# ── Data ──────────────────────────────────────────────────────────────────────
+# -- Data ----------------------------------------------------------------------
 
-dat <- readRDS("SCData_processed.rds")
+dat <- readRDS(here("SCData_processed.rds"))
 
 cat(sprintf("Dataset: %d observations from %d studies.\n",
             nrow(dat), length(unique(dat$newid))))
@@ -81,7 +75,6 @@ cat(sprintf("\nFitting CHE model at %d values of rho (0 to 0.95).\n", n_rho))
 # Pre-allocate results storage.
 results <- data.frame(
   rho       = rho_values,
-  logLik    = NA_real_,   # REML log-likelihood at each rho
   intercept = NA_real_,   # intercept estimate (Fisher's z)
   se        = NA_real_,   # CR2 standard error of the intercept
   tau       = NA_real_,   # between-study SD (sqrt of sigma2[1])
@@ -89,7 +82,7 @@ results <- data.frame(
 )
 
 # =============================================================================
-# Profile likelihood loop
+# Sensitivity loop
 # =============================================================================
 
 for (i in seq_len(n_rho)) {
@@ -128,10 +121,6 @@ for (i in seq_len(n_rho)) {
 
   if (!is.null(che_i)) {
 
-    # Extract the REML log-likelihood. In metafor, rma.mv objects do not have
-    # a $logLik slot; the log-likelihood is retrieved via the logLik() function.
-    results$logLik[i] <- as.numeric(logLik(che_i))
-
     # Extract the intercept and its CR2 SE (clustered at the study level).
     ct_i <- coef_test(
       obj     = che_i,
@@ -146,83 +135,11 @@ for (i in seq_len(n_rho)) {
     results$tau[i]   <- sqrt(che_i$sigma2[1])
     results$omega[i] <- sqrt(che_i$sigma2[2])
 
-    cat(sprintf("  rho = %.2f  logLik = %8.3f  intercept = %.4f  tau = %.4f  omega = %.4f\n",
-                rho_i, results$logLik[i], results$intercept[i],
+    cat(sprintf("  rho = %.2f  intercept = %.4f  se = %.4f  tau = %.4f  omega = %.4f\n",
+                rho_i, results$intercept[i], results$se[i],
                 results$tau[i], results$omega[i]))
   }
 }
-
-# =============================================================================
-# Identify the best rho
-# =============================================================================
-
-best_idx <- which.max(results$logLik)
-best_rho <- results$rho[best_idx]
-
-cat(sprintf("\nBest rho (maximum REML log-likelihood): %.2f\n", best_rho))
-cat(sprintf("  logLik at best rho:   %.4f\n", results$logLik[best_idx]))
-cat(sprintf("  logLik at rho = 0.50: %.4f\n",
-            results$logLik[results$rho == 0.50]))
-cat(sprintf("  Difference:           %.4f\n",
-            results$logLik[best_idx] - results$logLik[results$rho == 0.50]))
-
-# =============================================================================
-# Figure: REML log-likelihood vs rho (Figure_RhoLikelihood.png)
-# =============================================================================
-
-p_lik <- ggplot(results, aes(x = rho, y = logLik)) +
-
-  # Fitted profile likelihood curve
-  geom_line(linewidth = 0.9, color = "black") +
-  geom_point(size = 2.5, color = "black") +
-
-  # Vertical line at the protocol assumption (rho = 0.5)
-  geom_vline(
-    xintercept = 0.5,
-    linetype   = "dashed",
-    color      = "grey50",
-    linewidth  = 0.7
-  ) +
-  annotate("text", x = 0.5, y = min(results$logLik, na.rm = TRUE),
-           label = "rho = 0.5\n(protocol)", hjust = -0.1, vjust = 0,
-           size = 3, color = "grey40") +
-
-  # Vertical line at the best rho (if different from 0.5)
-  {if (best_rho != 0.5)
-    geom_vline(
-      xintercept = best_rho,
-      linetype   = "solid",
-      color      = "#d6604d",
-      linewidth  = 0.7
-    )
-  } +
-  {if (best_rho != 0.5)
-    annotate("text", x = best_rho, y = min(results$logLik, na.rm = TRUE),
-             label = paste0("rho = ", best_rho, "\n(best fit)"),
-             hjust = 1.1, vjust = 0, size = 3, color = "#d6604d")
-  } +
-
-  labs(
-    x        = "Within-study correlation (rho)",
-    y        = "REML log-likelihood",
-    title    = "Profile REML likelihood over rho",
-    subtitle = paste0(
-      "CHE model (intercept only). Best fit at rho = ", best_rho,
-      "; protocol uses rho = 0.5."
-    )
-  ) +
-  scale_x_continuous(breaks = seq(0, 0.95, by = 0.1)) +
-  theme_bw(base_size = 11) +
-  theme(plot.subtitle = element_text(size = 9))
-
-ggsave(
-  filename = "Figure_RhoLikelihood.png",
-  plot     = p_lik,
-  width    = 7,
-  height   = 5,
-  dpi      = 300
-)
-cat("\nFigure_RhoLikelihood.png saved.\n")
 
 # =============================================================================
 # Figure: CHE intercept (with 95% CI band) vs rho (Figure_RhoIntercept.png)
@@ -252,7 +169,7 @@ p_int <- ggplot(results_plot, aes(x = rho, y = intercept)) +
   geom_line(linewidth = 0.9, color = "black") +
   geom_point(size = 2.5, color = "black") +
 
-  # Vertical line at rho = 0.5
+  # Vertical line at rho = 0.5 (protocol assumption)
   geom_vline(
     xintercept = 0.5,
     linetype   = "dashed",
@@ -261,24 +178,8 @@ p_int <- ggplot(results_plot, aes(x = rho, y = intercept)) +
   ) +
   annotate("text", x = 0.5,
            y = min(results_plot$ci_lo, na.rm = TRUE),
-           label = "rho = 0.5", hjust = -0.1, vjust = 0,
+           label = "rho = 0.5\n(protocol)", hjust = -0.1, vjust = 0,
            size = 3, color = "grey40") +
-
-  # Vertical line at best rho (if different from 0.5)
-  {if (best_rho != 0.5)
-    geom_vline(
-      xintercept = best_rho,
-      linetype   = "solid",
-      color      = "#d6604d",
-      linewidth  = 0.7
-    )
-  } +
-  {if (best_rho != 0.5)
-    annotate("text", x = best_rho,
-             y = min(results_plot$ci_lo, na.rm = TRUE),
-             label = paste0("rho = ", best_rho),
-             hjust = 1.1, vjust = 0, size = 3, color = "#d6604d")
-  } +
 
   labs(
     x        = "Within-study correlation (rho)",
@@ -291,22 +192,121 @@ p_int <- ggplot(results_plot, aes(x = rho, y = intercept)) +
   theme(plot.subtitle = element_text(size = 9))
 
 ggsave(
-  filename = "Figure_RhoIntercept.png",
+  filename = here("Figure_RhoIntercept.png"),
   plot     = p_int,
   width    = 7,
   height   = 5,
   dpi      = 300
 )
-cat("Figure_RhoIntercept.png saved.\n")
+cat("\nFigure_RhoIntercept.png saved.\n")
 
 # =============================================================================
 # Figure: Variance components (tau and omega) vs rho (Figure_RhoVarianceComponents.png)
 # =============================================================================
 #
-# Tau (between-study SD) and omega (within-study SD) are not shown in either
+# Tau (between-study SD) and omega (within-study SD) are not shown in the
 # figure above, so they are plotted together here. As rho increases, more of
 # the observed similarity among a study's effect sizes is attributed to
 # correlated sampling error rather than to a shared study-level true effect,
 # so heterogeneity is mechanically reallocated away from the between-study
 # component (tau) and toward the within-study component (omega). Reshape to
 # long format so both series share one legend.
+
+results_var <- results %>%
+  filter(!is.na(tau)) %>%
+  select(rho, tau, omega) %>%
+  pivot_longer(
+    cols      = c(tau, omega),
+    names_to  = "component",
+    values_to = "value"
+  ) %>%
+  mutate(
+    component = recode(
+      component,
+      tau   = "Tau (between-study SD)",
+      omega = "Omega (within-study SD)"
+    )
+  )
+
+p_var <- ggplot(results_var, aes(x = rho, y = value, color = component, linetype = component)) +
+
+  geom_line(linewidth = 0.9) +
+  geom_point(size = 2.2) +
+
+  # Vertical line at rho = 0.5 (protocol assumption)
+  geom_vline(
+    xintercept = 0.5,
+    linetype   = "dashed",
+    color      = "grey50",
+    linewidth  = 0.7
+  ) +
+  annotate("text", x = 0.5, y = min(results_var$value, na.rm = TRUE),
+           label = "rho = 0.5\n(protocol)", hjust = -0.1, vjust = 0,
+           size = 3, color = "grey40") +
+
+  scale_color_manual(values = c(
+    "Tau (between-study SD)"   = "black",
+    "Omega (within-study SD)"  = "#d6604d"
+  )) +
+  scale_linetype_manual(values = c(
+    "Tau (between-study SD)"   = "solid",
+    "Omega (within-study SD)"  = "dashed"
+  )) +
+
+  labs(
+    x        = "Within-study correlation (rho)",
+    y        = "Standard deviation (Fisher's z)",
+    color    = NULL,
+    linetype = NULL,
+    title    = "Sensitivity of variance components to rho",
+    subtitle = "Between-study (tau) vs. within-study (omega) heterogeneity, CHE model (intercept only)."
+  ) +
+  scale_x_continuous(breaks = seq(0, 0.95, by = 0.1)) +
+  theme_bw(base_size = 11) +
+  theme(
+    plot.subtitle   = element_text(size = 9),
+    legend.position = "bottom"
+  )
+
+ggsave(
+  filename = here("Figure_RhoVarianceComponents.png"),
+  plot     = p_var,
+  width    = 7,
+  height   = 5,
+  dpi      = 300
+)
+cat("Figure_RhoVarianceComponents.png saved.\n")
+
+# =============================================================================
+# Results table
+# =============================================================================
+
+tbl <- results %>%
+  mutate(
+    across(c(intercept, se, tau, omega), ~ round(.x, 4))
+  ) %>%
+  rename(
+    `Rho`           = rho,
+    `Intercept`     = intercept,
+    `SE (CR2)`      = se,
+    `Tau`           = tau,
+    `Omega`         = omega
+  )
+
+write_xlsx(
+  list("Rho sensitivity" = tbl),
+  path = here("Table_RhoSensitivity.xlsx")
+)
+cat("Table_RhoSensitivity.xlsx saved.\n")
+
+cat("\nDone. Summary:\n")
+cat(sprintf("  Intercept at rho = 0.50:      %.4f (SE = %.4f)\n",
+            results$intercept[results$rho == 0.50],
+            results$se[results$rho == 0.50]))
+cat(sprintf("  Intercept at rho = 0.00:      %.4f\n", results$intercept[results$rho == 0.00]))
+cat(sprintf("  Intercept at rho = 0.95:      %.4f\n", results$intercept[results$rho == 0.95]))
+
+# -- Run time ------------------------------------------------------------------
+elapsed <- proc.time() - start_time
+cat(sprintf("\nTotal run time: %.1f seconds (%.1f minutes).\n",
+            elapsed["elapsed"], elapsed["elapsed"] / 60))

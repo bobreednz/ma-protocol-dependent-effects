@@ -1,5 +1,3 @@
-setwd("C:/PROTOCOL OF MAs WITH DEPENDENT DATA")
-
 # Record start time -- printed at the end so run time can be documented.
 start_time <- proc.time()
 
@@ -7,11 +5,12 @@ start_time <- proc.time()
 # Install and load required packages
 # ============================================================
 
-packages <- c("metafor", "clubSandwich", "tidyverse", "writexl")
+packages <- c("here", "metafor", "clubSandwich", "tidyverse", "writexl")
 
 installed <- packages %in% installed.packages()[, "Package"]
 if (any(!installed)) install.packages(packages[!installed])
 
+library(here)           # resolves file paths relative to the project root (.Rproj)
 library(metafor)       # meta-analytic models via rma.mv()
 library(clubSandwich)  # CR2 clustered standard errors
 library(tidyverse)     # data manipulation
@@ -21,7 +20,7 @@ library(writexl)       # export to Excel
 # Load data
 # ============================================================
 
-DT <- readRDS("SCData_processed.rds")
+DT <- readRDS(here("SCData_processed.rds"))
 
 # Count total effect sizes and number of studies
 n_obs     <- nrow(DT)
@@ -155,9 +154,10 @@ ct_CHE <- coef_test(model_CHE, cluster = DT$newid, vcov = "CR2")
 # variance component but different structures), so no LR
 # test is possible between them. Similarly, HE and CHE use
 # different covariance matrices (diagonal vs. imputed
-# block-diagonal), so no LR test is possible; informal
-# evidence comes from the rho profile likelihood (Section 4
-# of the protocol), since HE is CHE with rho = 0.
+# block-diagonal), so no LR test is possible. The choice
+# between HE and CHE is a choice about the assumed within-study
+# correlation (rho), made on substantive grounds rather than by
+# likelihood comparison (see Section 4 of the protocol).
 # ============================================================
 
 lrt_RE  <- anova(model_FE,    model_RE_ML)   # RE vs FE
@@ -295,4 +295,20 @@ table_out <- tibble(
     n_studies,
     formatC(rho, digits = 3, format = "f"),
     fmt_vc(model_CHE$sigma2[1]),
-    fmt
+    fmt_vc(model_CHE$sigma2[2]),
+    p_lrt_CHE
+  )
+)
+
+# ============================================================
+# Export to Excel
+# ============================================================
+
+write_xlsx(table_out, here("Table4_Protocol.xlsx"))
+
+cat("Done. Output saved to Table4_Protocol.xlsx\n")
+
+# ── Run time ──────────────────────────────────────────────────────────────────────────────
+elapsed <- proc.time() - start_time
+cat(sprintf("\nTotal run time: %.1f seconds (%.1f minutes).\n",
+            elapsed["elapsed"], elapsed["elapsed"] / 60))

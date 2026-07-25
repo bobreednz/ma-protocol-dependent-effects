@@ -57,25 +57,24 @@
 
 # -- Packages -----------------------------------------------------------------
 
-packages <- c("metafor", "clubSandwich", "tidyverse", "openxlsx", "BMS")
+packages <- c("here", "metafor", "clubSandwich", "tidyverse", "openxlsx", "BMS")
 
 installed <- packages %in% installed.packages()[, "Package"]
 if (any(!installed)) install.packages(packages[!installed])
 
+library(here)           # resolves file paths relative to the project root (.Rproj)
 library(metafor)       # rma.mv() for CHE meta-regression
 library(clubSandwich)  # coef_test() for CR2 standard errors
 library(tidyverse)     # data manipulation
 library(openxlsx)      # Excel export with formatting
 library(BMS)           # bms() for Bayesian Model Averaging
 
-setwd("C:/PROTOCOL OF MAs WITH DEPENDENT DATA")
-
 # Record start time.
 start_time <- proc.time()
 
 # -- Data ---------------------------------------------------------------------
 
-dat <- readRDS("SCData_processed.rds")
+dat <- readRDS(here("SCData_processed.rds"))
 
 cat(sprintf("Dataset: %d observations from %d studies.\n",
             nrow(dat), length(unique(dat$newid))))
@@ -504,4 +503,13 @@ setColWidths(wb, "Panel B", cols = 1:2, widths = c(28, 60))
 
 # =============================================================================
 # Save
-# ========================
+# =============================================================================
+
+saveWorkbook(wb, here("Table6_Protocol.xlsx"), overwrite = TRUE)
+
+cat("\nTable6_Protocol.xlsx saved (two sheets: Panel A, Panel B).\n")
+
+# -- Run time -----------------------------------------------------------------
+
+elapsed <- proc.time() - start_time
+cat(sprintf("\nTotal run time: %.1f seconds.\n", elapsed["elapsed"]))

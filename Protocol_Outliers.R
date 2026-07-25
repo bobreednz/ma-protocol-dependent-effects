@@ -27,12 +27,11 @@
 
 # ── Packages ──────────────────────────────────────────────────────────────────
 
+library(here)           # resolves file paths relative to the project root (.Rproj)
 library(metafor)       # rma() and rma.mv() for meta-analytic models
 library(clubSandwich)  # coef_test() for CR2 clustered standard errors
 library(tidyverse)     # data manipulation and ggplot2 for figures
 library(writexl)       # write_xlsx() to export Excel output
-
-setwd("C:/PROTOCOL OF MAs WITH DEPENDENT DATA")
 
 # Record start time -- printed at the end so run time can be documented.
 start_time <- proc.time()
@@ -41,7 +40,7 @@ start_time <- proc.time()
 
 # Load the processed dataset produced by Protocol_DataCleaning.R.
 # Never use the raw SCData (20240508).dta directly.
-dat <- readRDS("SCData_processed.rds")
+dat <- readRDS(here("SCData_processed.rds"))
 
 cat(sprintf("Dataset loaded: %d observations from %d studies.\n",
             nrow(dat), length(unique(dat$newid))))
@@ -73,7 +72,7 @@ inf <- influence(re_screen)
 # produces one panel per diagnostic. With 957 observations the plot is dense,
 # so we use a tall canvas and small point size.
 png(
-  filename = "Figure_Influence_RE.png",
+  filename = here("Figure_Influence_RE.png"),
   width    = 10,
   height   = 14,
   units    = "in",
@@ -311,7 +310,7 @@ p_jk <- ggplot(jk_plot, aes(x = intercept, y = study_label)) +
   )
 
 ggsave(
-  filename = "Figure_Jackknife_CHE.png",
+  filename = here("Figure_Jackknife_CHE.png"),
   plot     = p_jk,
   width    = 7,
   height   = 11,
@@ -339,7 +338,7 @@ jk_table <- jk %>%
 
 write_xlsx(
   list("Jackknife" = jk_table),
-  path = "Table_Jackknife_CHE.xlsx"
+  path = here("Table_Jackknife_CHE.xlsx")
 )
 
 cat("Table_Jackknife_CHE.xlsx saved.\n")

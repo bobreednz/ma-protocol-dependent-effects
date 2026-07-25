@@ -1,5 +1,3 @@
-setwd("C:/PROTOCOL OF MAs WITH DEPENDENT DATA")
-
 # Record start time -- printed at the end so run time can be documented.
 start_time <- proc.time()
 
@@ -7,11 +5,12 @@ start_time <- proc.time()
 # Install and load required packages
 # ============================================================
 
-packages <- c("metafor", "tidyverse", "openxlsx")
+packages <- c("here", "metafor", "tidyverse", "openxlsx")
 
 installed <- packages %in% installed.packages()[, "Package"]
 if (any(!installed)) install.packages(packages[!installed])
 
+library(here)       # resolves file paths relative to the project root (.Rproj)
 library(metafor)   # rma(), rma.mv(), weights()
 library(tidyverse) # dplyr, tibble
 library(openxlsx)  # createWorkbook(), setColWidths(), mergeCells()
@@ -20,7 +19,7 @@ library(openxlsx)  # createWorkbook(), setColWidths(), mergeCells()
 # Load data
 # ============================================================
 
-DT <- readRDS("SCData_processed.rds")
+DT <- readRDS(here("SCData_processed.rds"))
 
 n_studies <- length(unique(DT$newid))
 
@@ -296,7 +295,7 @@ addStyle(wb, "Table3", style = wrap_style,
          rows = 2:(nrow(table3) + 1), cols = 1:4,
          gridExpand = TRUE)
 
-saveWorkbook(wb, "Table3_Protocol.xlsx", overwrite = TRUE)
+saveWorkbook(wb, here("Table3_Protocol.xlsx"), overwrite = TRUE)
 cat("Table 3 saved to Table3_Protocol.xlsx\n")
 
 # ── Run time ──────────────────────────────────────────────────────────────────

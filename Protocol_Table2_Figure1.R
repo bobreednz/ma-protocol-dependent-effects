@@ -1,5 +1,3 @@
-setwd("C:/PROTOCOL OF MAs WITH DEPENDENT DATA")
-
 # Record start time -- printed at the end so run time can be documented.
 start_time <- proc.time()
 
@@ -7,11 +5,12 @@ start_time <- proc.time()
 # Install and load required packages
 # ============================================================
 
-packages <- c("tidyverse", "writexl")
+packages <- c("here", "tidyverse", "writexl")
 
 installed <- packages %in% installed.packages()[, "Package"]
 if (any(!installed)) install.packages(packages[!installed])
 
+library(here)        # resolves file paths relative to the project root (.Rproj)
 library(tidyverse)  # ggplot2, dplyr, etc.
 library(writexl)    # write_xlsx() for Excel export
 
@@ -19,7 +18,7 @@ library(writexl)    # write_xlsx() for Excel export
 # Load data
 # ============================================================
 
-DT <- readRDS("SCData_processed.rds")
+DT <- readRDS(here("SCData_processed.rds"))
 
 # ============================================================
 # TABLE 2: Descriptive statistics for effect sizes
@@ -58,7 +57,7 @@ table2 <- tibble(
                      as.character(nrow(DT)))
 )
 
-write_xlsx(table2, "Table2_Protocol.xlsx")
+write_xlsx(table2, here("Table2_Protocol.xlsx"))
 cat("Table 2 saved to Table2_Protocol.xlsx\n")
 
 # ============================================================
@@ -166,10 +165,12 @@ fig1 <- fig1 +
 # width = 6, height = 4 inches at 300 dpi gives a figure
 # suitable for most journal and document formats.
 
-ggsave("Figure1_Protocol.png", fig1,
+ggsave(here("Figure1_Protocol.png"), fig1,
        width = 6, height = 4, dpi = 300)
 
 cat("Figure 1 saved to Figure1_Protocol.png\n")
 
 # ── Run time ──────────────────────────────────────────────────────────────────────────────
-elapsed <- pro
+elapsed <- proc.time() - start_time
+cat(sprintf("\nTotal run time: %.1f seconds (%.1f minutes).\n",
+            elapsed["elapsed"], elapsed["elapsed"] / 60))

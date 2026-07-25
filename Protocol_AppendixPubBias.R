@@ -53,6 +53,7 @@
 
 # ── Packages ──────────────────────────────────────────────────────────────────
 
+library(here)            # resolves file paths relative to the project root (.Rproj)
 library(metafor)        # rma.mv() for CHE-ISCW models
 library(clubSandwich)   # robust() for CR2 standard errors
 library(metaselection)  # selection_model() and define_priors()
@@ -64,14 +65,12 @@ library(writexl)        # write_xlsx()
 # If metaselection is not yet installed (GitHub only, not on CRAN):
 # remotes::install_github("jepusto/metaselection")
 
-setwd("C:/PROTOCOL OF MAs WITH DEPENDENT DATA")
-
 # Record start time -- printed at the end so run time can be documented.
 start_time <- proc.time()
 
 # ── Data ──────────────────────────────────────────────────────────────────────
 
-dat <- readRDS("SCData_processed.rds")
+dat <- readRDS(here("SCData_processed.rds"))
 
 cat(sprintf("Dataset: %d observations from %d studies.\n",
             nrow(dat), length(unique(dat$newid))))
@@ -257,7 +256,7 @@ print(mod_3psm)
 
 # Save the selection function plot. transform = "sqrt" spreads the lower
 # end of the lambda range for readability.
-png("FigureA_SelectionPlot_3PSM.png", width = 6, height = 5, units = "in", res = 300)
+png(here("FigureA_SelectionPlot_3PSM.png"), width = 6, height = 5, units = "in", res = 300)
 print(selection_plot(mod_3psm, transform = "sqrt"))
 dev.off()
 cat("FigureA_SelectionPlot_3PSM.png saved.\n")
@@ -292,7 +291,7 @@ mod_4psm <- selection_model(
 
 print(mod_4psm)
 
-png("FigureA_SelectionPlot_4PSM.png", width = 6, height = 5, units = "in", res = 300)
+png(here("FigureA_SelectionPlot_4PSM.png"), width = 6, height = 5, units = "in", res = 300)
 print(selection_plot(mod_4psm, transform = "sqrt"))
 dev.off()
 cat("FigureA_SelectionPlot_4PSM.png saved.\n")
@@ -478,7 +477,7 @@ tbl <- data.frame(
 
 write_xlsx(
   list("Alt Pub Bias" = tbl),
-  path = "TableA_PubBias.xlsx"
+  path = here("TableA_PubBias.xlsx")
 )
 
 cat("\nAll outputs saved:\n")

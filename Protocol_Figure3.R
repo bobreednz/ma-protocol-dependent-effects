@@ -1,10 +1,9 @@
+library(here)   # resolves file paths relative to the project root (.Rproj)
 library(haven)
 library(RoBMA)
 
-setwd("C:/PROTOCOL OF MAs WITH DEPENDENT DATA")
-
 # ---- LOAD DATA ----
-dat <- readRDS("SCData_processed.rds")
+dat <- readRDS(here("SCData_processed.rds"))
 
 # ---- TRANSFORM TO FISHER'S Z ----
 # atanh() applies the Fisher's z transformation to the partial correlations.
@@ -32,7 +31,7 @@ print(time_fit)
 # Save so Protocol_Table8.R can load without refitting.
 cat("Saving model object...\n")
 time_save <- system.time({
-  saveRDS(fit, "RoBMA_intercept_only.rds")
+  saveRDS(fit, here("RoBMA_intercept_only.rds"))
 })
 cat("Save time (seconds):\n")
 print(time_save)

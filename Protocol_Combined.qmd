@@ -38,7 +38,7 @@ Reviewing 1,000 meta-analyses across ten disciplines, Wu, Duan, Reed, and Tipton
 
 In practice, dependent effect sizes arise in several distinct ways. A study may report effects for multiple outcome measures, such as different dimensions of economic performance or different operationalizations of a psychological construct. Effects may be estimated at multiple follow-up time points on the same sample. A study may compare several treatment groups to a common control group, generating multiple non-independent comparisons. At a higher level, dependence can also arise when multiple studies are conducted by the same research group, share overlapping samples, or belong to a tightly defined empirical tradition.
 
-Treating effect size estimates as though they were independent when they are not overstates the amount of independent information in the database, leading to standard errors that are biased downward and to hypothesis tests and confidence intervals that do not achieve their nominal properties. The consequences are not limited to this loss of inferential validity. When effect sizes are clustered within studies, a correctly specified working model for the dependence structure also yields more efficient estimates of moderator coefficients -- that is, tighter standard errors and more powerful tests -- than models that treat all estimates as independent. Ignoring dependence therefore carries a double cost: it invalidates the standard tools of statistical inference, and it discards information that a properly specified model would have used.
+Treating effect size estimates as though they were independent when they are not overstates the amount of independent information in the database, leading to standard errors that are biased downward and to hypothesis tests and confidence intervals that do not achieve their nominal properties. The consequences are not limited to this loss of inferential validity. A correctly specified working model also makes use of information about the covariance structure among effect sizes that an analysis assuming independence discards, and so yields more efficient estimates of moderator coefficients. Ignoring dependence therefore carries a double cost: it invalidates the standard tools of statistical inference, and it discards information that a properly specified model would have used.
 
 A protocol offers several distinct advantages that the methodological literature alone does not provide. The first is that a wide variety of approaches have been proposed for addressing effect-size dependence, and it is not obvious how they fit together into a single, coherent workflow. These include correlated-effects (CE), hierarchical-effects (HE), and correlated-and-hierarchical-effects (CHE) working models, estimated within a robust-variance-estimation (RVE) framework using cluster-robust standard errors, as well as Robust Bayesian Meta-Analysis (RoBMA), which models dependence directly within a Bayesian model-averaging framework. A further set of recent developments extends these same ideas to publication bias, integrating bias correction with the dependence structure rather than treating the two as separate problems (Rodgers and Pustejovsky, 2021; Chen and Pustejovsky, 2026; Pustejovsky, Citkowicz, and Joshi, 2026; Bartoš, Maier, and Wagenmakers, 2026). Each of these approaches is defensible on its own terms and addresses a genuine limitation of simpler methods, but the applied researcher is left largely without guidance on which combination of dependence structure, estimator, and publication-bias correction is appropriate for a given dataset, and in what sequence the corresponding analyses should be conducted.
 
@@ -57,7 +57,7 @@ Parallel to these developments, recent extensions of the Robust Bayesian Meta-An
 
 ## What This Protocol Covers
 
-This protocol provides a structured, step-by-step guide to conducting a meta-analysis in the presence of dependent effect sizes. It is organized around a logical sequence of analytical decisions that a researcher encounters when working through such a synthesis: cleaning the data, describing the effect size distribution, assessing how study weights are distributed, choosing among five estimators of increasing complexity, evaluating publication bias using PET-PEESE regression, and estimating a full meta-regression with best-practice predictions. 
+This protocol is built around a single, clickable Quarto (.qmd) document that weaves together narrative explanation, executable R code, and rendered results into one self-contained file. A researcher can adapt it directly to a new project simply by substituting a new dataset and adjusting variable names, rather than reimplementing the methodology from a written description. It provides a structured, step-by-step guide to conducting a meta-analysis in the presence of dependent effect sizes. It is organized around a logical sequence of analytical decisions that a researcher encounters when working through such a synthesis: cleaning the data, describing the effect size distribution, assessing how study weights are distributed, choosing among five estimators of increasing complexity, evaluating publication bias using PET-PEESE regression, and estimating a full meta-regression with best-practice predictions. 
 
 The protocol then extends the analysis using RoBMA, which corrects for publication bias through model averaging rather than linear adjustment, and derives a parallel set of RoBMA-corrected best-practice predictions. A concluding section compares the PET-PEESE and RoBMA corrections and discusses what each approach implies about the underlying literature. 
 
@@ -81,11 +81,11 @@ The protocol is organized around five estimators, presented in order of increasi
 
 **Correlated and hierarchical effects (CHE).** Two random effects, `~ 1 | newid/obs`, combined with an imputed block-diagonal covariance matrix. This model accommodates between-study heterogeneity, within-study heterogeneity, and correlated sampling errors simultaneously, and is the preferred default model following Pustejovsky and Tipton (2022).
 
-For the CE and CHE models, the imputed block-diagonal covariance matrix is constructed using `vcalc()` from `metafor`, under the assumption of a constant within-study sampling correlation $\rho$. The choice of $\rho$ is not identified from the data and must be specified by the researcher. The protocol uses $\rho = 0.5$ as the default, following common practice, with a sensitivity analysis over a grid of values presented in Section 4.
+For the CE and CHE models, the imputed block-diagonal covariance matrix is constructed using `vcalc()` from `metafor`, under the assumption of a constant within-study sampling correlation $\rho$. The choice of $\rho$ is not identified from the data and must be specified by the researcher. The protocol uses $\rho = 0.5$ as the default, following common practice, with a sensitivity analysis over a grid of values presented in Appendix A.
 
 ## Document Structure
 
-The protocol proceeds in the following order. Section 2 covers data cleaning and quality checks, which must be completed before any analysis. Section 3 addresses preliminary analysis: variable descriptions, effect size descriptives, and the distribution of study weights. Section 4 covers the choice of $\rho$. Section 5 presents the five estimators side by side and discusses model selection. Section 6 turns to publication bias, using funnel plots and PET-PEESE regression. Section 7 estimates a full meta-regression using Bayesian Model Averaging and the CHE model. Section 8 derives best-practice effect size predictions. Section 9 extends the analysis using Robust Bayesian Meta-Analysis (RoBMA), comparing the PET-PEESE correction to a model-averaged Bayesian approach and deriving RoBMA-corrected best-practice predictions. Section 10 compares the two approaches directly. Section 6 also includes a robustness-checks subsection presenting two alternative publication bias methods (CHE-ISCW-PET-PEESE and step-function selection models). One appendix addresses outlier and influence analysis.
+The protocol proceeds in the following order. Section 2 covers data cleaning and quality checks, which must be completed before any analysis. Section 3 addresses preliminary analysis: variable descriptions, effect size descriptives, and the distribution of study weights. Section 4 covers the choice of $\rho$. Section 5 presents the five estimators side by side and discusses model selection. Section 6 turns to publication bias, using funnel plots and PET-PEESE regression. Section 7 estimates a full meta-regression using Bayesian Model Averaging and the CHE model. Section 8 derives best-practice effect size predictions. Section 9 extends the analysis using Robust Bayesian Meta-Analysis (RoBMA), comparing the PET-PEESE correction to a model-averaged Bayesian approach and deriving RoBMA-corrected best-practice predictions. Section 10 compares the two approaches directly. Section 6 also includes a robustness-checks subsection presenting two alternative publication bias methods (CHE-ISCW-PET-PEESE and step-function selection models). Appendix A reports a sensitivity analysis for the choice of $\rho$, Appendix B addresses outlier and influence analysis, and Appendix C reports a robustness check on the RoBMA meta-regression using an alternative, CHE-motivated moderator set.
 
 Each section follows the same structure: a methodological narrative explaining what is being estimated and why, a code chunk that sources the relevant R script, and a display chunk that reads the output back into the document. After the output is displayed, a brief interpretive note highlights what the researcher should examine and identifies any decision that must be made before proceeding.
 
@@ -93,11 +93,14 @@ Each section follows the same structure: a methodological narrative explaining w
 
 All analyses are conducted in R. The following packages must be installed before running any script in this protocol. The `metaselection` package, used for the step-function selection models in Section 6's robustness checks, must be installed from GitHub.
 
+One of these packages, `RoBMA`, additionally requires JAGS (Just Another Gibbs Sampler), a standalone program that performs the underlying MCMC sampling. JAGS is not an R package and cannot be installed with `install.packages()`, so it must be installed separately, and before `RoBMA`. Download and install JAGS (version 4.3.1 or newer) from https://mcmc-jags.sourceforge.io/, then run the code below.
+
 ```{r}
 #| label: install-packages
 
 # Install standard packages from CRAN
 install.packages(c(
+  "here",          # resolves file paths relative to the project root (.Rproj)
   "metafor",       # meta-analytic models
   "clubSandwich",  # cluster-robust (CR2) standard errors
   "tidyverse",     # data manipulation and plotting
@@ -106,7 +109,7 @@ install.packages(c(
   "openxlsx",      # writing Excel output with formatting (Tables 3, 6, 8, 9, 10)
   "kableExtra",    # table formatting in display chunks
   "BMS",           # Bayesian Model Averaging (Section 7)
-  "RoBMA",         # Robust Bayesian meta-analysis (Section 9)
+  "RoBMA",         # Robust Bayesian meta-analysis (Section 9); requires JAGS, see note above
   "future",        # parallel processing (Section 6 robustness checks)
   "progressr"      # bootstrap progress display (Section 6 robustness checks)
 ))
@@ -116,14 +119,16 @@ install.packages(c(
 remotes::install_github("jepusto/metaselection")
 ```
 
-Once packages are installed, set the working directory to the folder containing all scripts and data files. All scripts in this protocol assume a common working directory; replace the path below with the location of that folder on your own machine.
+### Reproducibility: project setup instead of `setwd()`
+
+This protocol uses the `here` package together with an RStudio Project file, `MA_Protocol.Rproj`, which is included in the project folder alongside the scripts and data, so that no script or the protocol document itself needs a hardcoded path.
+
+To work with this protocol on your own machine: (1) download or clone the entire project folder, keeping all scripts, data files, and `MA_Protocol.Rproj` together in one folder; (2) open the project by double-clicking `MA_Protocol.Rproj` (or, in RStudio, File > Open Project); this sets your working directory to the project root automatically, with no path to edit. Every script then locates its files with `here("filename")` rather than a bare `"filename"`, which resolves relative to the project root regardless of your operating system or username.
 
 ```{r}
 #| label: setup
 
-# Replace this path with the location of your scripts and data files
-setwd("C:/PROTOCOL OF MAs WITH DEPENDENT DATA")
-
+library(here)        # resolves file paths relative to the project root (.Rproj)
 library(readxl)     # read_excel() used in all display chunks
 library(kableExtra) # column_spec() used for table formatting
 ```
@@ -149,9 +154,9 @@ The script `Protocol_DataCleaning.R` runs eight sequential quality checks on the
 
 **A note on traceability to source studies.** None of the eight checks above can substitute for being able to trace a specific effect size back to its exact location in the original publication. The dataset used in this protocol (`SCData (20240508).dta`) does not include variables recording the table, page, and regression (or column) number in the source paper from which each estimate was extracted. This is a limitation of the illustrative dataset, not a feature of good practice: whenever a flagged or otherwise suspect observation needs to be checked, the researcher must be able to open the original paper and locate the exact estimate in question, which is only possible if this information was recorded at the time of data extraction. We recommend that any meta-analytic dataset include these identifiers as standard practice, alongside the study identifier (`newid`) already present here.
 
-No observations are dropped during this step. Instead, the observation-level checks add binary flag variables to the dataset, and an omnibus flag (`flag_any`) marks any observation that triggers at least one of them. The researcher inspects these flags and decides which, if any, to act upon before proceeding.
+No observations are dropped during this step. Instead, the observation-level checks add binary flag variables to the dataset, and an omnibus flag (`flag_any`) marks any observation that triggers at least one of them. It is up to the researcher to inspect these flags and decide which, if any, to act upon before proceeding.
 
-The script also exports a five-sheet Excel report (`DataCleaning_Report.xlsx`) summarizing each check, a flagged dataset (`SCData_flagged.dta`) containing the original data plus the flag columns, and a processed dataset (`SCData_processed.rds`) that all subsequent analysis scripts load. For this protocol, the processed dataset is identical to the raw data — no flagged observations are dropped, in order to maintain comparability with Xue, Reed, and van Aert (2025). In your own work, after inspecting `DataCleaning_Report.xlsx` and deciding which flagged observations to drop or revise, make those changes to the flagged dataset and save the result as `SCData_processed.rds` before running any subsequent scripts. We recommend keeping a log file documenting every change made and the reason for it.
+The script exports a five-sheet Excel report (`DataCleaning_Report.xlsx`) summarizing each check, a flagged dataset (`SCData_flagged.dta`) containing the original data plus the flag columns, and a processed dataset (`SCData_processed.rds`) that all subsequent analysis scripts load. For this protocol, the processed dataset is identical to the raw data — no flagged observations are dropped, in order to maintain comparability with Xue, Reed, and van Aert (2025). For their own research, researchers should first inspect `DataCleaning_Report.xlsx` and decide which flagged observations should be dropped or revised. They should then apply those changes to the flagged dataset and save the resulting file as `SCData_processed.rds` before running any subsequent scripts. Researchers are also encouraged to maintain a log documenting each change and the reason for it.
 
 **Note for readers using non-Stata data.** The cleaning script reads the raw dataset using `read_dta()` from the `haven` package, which is specific to Stata `.dta` files. If your data are stored in a different format, replace that line with the appropriate R function: `read.csv()` for CSV files, `read_excel()` from `readxl` for Excel files, or `load()` / `readRDS()` for R-native formats. All subsequent scripts load `SCData_processed.rds` using `readRDS()` and require no modification for non-Stata data.
 
@@ -175,9 +180,9 @@ library(readxl)
 read_excel("DataCleaning_Report.xlsx", sheet = 1)
 ```
 
-**What to look for.** The researcher should examine whether any observations are flagged by the major standard error check or the coding conflict check, as these are the most likely to reflect genuine errors. Minor standard error discrepancies and small degrees of freedom flags are often a normal feature of the literature and may not require action. True duplicates, if present, should always be investigated. The outlier flags identify extreme effect sizes that may warrant examination in the outlier analysis (the Appendix), but they do not automatically indicate erroneous data.
+**What to look for.** The researcher should examine whether any observations are flagged by the major standard error check or the coding conflict check, as these are the most likely to reflect genuine errors. Minor standard error discrepancies and small degrees of freedom flags are often a normal feature of the literature and may not require action. True duplicates, if present, should always be investigated. The outlier flags identify extreme effect sizes that may warrant examination in the outlier analysis (Appendix B), but they do not automatically indicate erroneous data.
 
-**Decision point.** After inspecting the flags and the `DataCleaning_Report.xlsx`, the researcher decides whether to exclude or revise any observations. If changes are made, they should be saved to `SCData_processed.rds` — the file that all subsequent analysis scripts load. We recommend keeping a log file documenting every change made and the reason for it. For the illustrative dataset used here, no observations are excluded; the processed dataset is identical to the raw data, and all 957 effect sizes proceed to analysis.
+**Decision point.** For the illustrative dataset used here, no observations are excluded following this review: the processed dataset is identical to the raw data, and all 957 effect sizes proceed to analysis.
 
 ---
 
@@ -269,7 +274,7 @@ library(knitr)
 include_graphics("Figure1_Protocol.png")
 ```
 
-**What to look for.** The mean and median effect sizes provide an initial (unadjusted) sense of the central tendency of the literature. An excess of statistically significant results, visible in the inset table, raises the possibility of selective reporting and motivates the formal tests in Section 6. A distribution that is noticeably skewed or multimodal may suggest that the literature is not homogeneous and that moderator analysis is warranted.
+**What to look for.** The mean and median effect sizes provide an initial (unadjusted) sense of the central tendency of the literature. An excess of statistically significant results, visible in the inset table, raises the possibility of selective reporting and motivates the formal tests in Section 6. A distribution that is noticeably skewed or multimodal may suggest that the literature is not homogeneous and that moderator analysis is warranted. The converse does not hold, however: a unimodal, symmetric distribution does not rule out moderator effects, which may be present even when the marginal distribution of effect sizes appears well behaved.
 
 ---
 
@@ -303,37 +308,13 @@ readxl::read_excel("Table3_Protocol.xlsx") |> knitr::kable()
 
 # The Choice of Rho
 
-Before estimating the five models in the next section, the researcher must decide on a value for $\rho$, the assumed within-study sampling correlation used to construct the imputed block-diagonal covariance matrix for the CE and CHE models. This parameter governs the degree to which effect size estimates from the same study are treated as correlated in their sampling errors, and it cannot be identified from the data.
+Before estimating the five models in the next section, the researcher must choose a value for $\rho$, the assumed within-study sampling correlation used to construct the imputed block-diagonal covariance matrix for the CE and CHE models. This value governs the degree to which effect size estimates from the same study are treated as correlated in their sampling errors.
 
-In most applications, the true value of $\rho$ is unknown because primary studies rarely report the correlations between their outcome measures or model specifications. The standard practice is to assume a plausible constant value -- commonly $\rho = 0.5$ -- and to report sensitivity analyses documenting how results change across a range of alternatives. The sensitivity analysis below profiles the REML log-likelihood of the intercept-only CHE model over a grid of 20 candidate values of $\rho$ (from 0 to 0.95 in steps of 0.05), identifying the value that maximizes the likelihood and plotting the CHE intercept and variance components as functions of $\rho$.
+This value cannot be identified from the data, and it cannot be selected by the likelihood or by any other model-comparison criterion. $\rho$ enters the assumed sampling-covariance matrix rather than the random-effects model, so different values of $\rho$ correspond to different assumed data rather than to competing models fit to the same data.
 
-**Decision point.** The researcher should run this analysis before proceeding to the five estimators in the next section. If the profile likelihood is flat over a wide range of $\rho$ values and the intercept is stable, then the choice of $\rho$ matters little and the default of 0.5 can be retained. If the likelihood is sharply peaked at a value far from 0.5, the researcher may choose to use the likelihood-maximizing value instead. Whatever value is chosen, it should be reported along with the sensitivity analysis (figures).
+Since primary studies rarely report the correlations among their outcome measures or model specifications, the standard practice is to assume a plausible constant value, commonly $\rho = 0.5$, and to verify by sensitivity analysis that the substantive conclusions do not depend on the particular value chosen. This protocol adopts $\rho = 0.5$ throughout. The corresponding sensitivity analysis for the running example is reported in Appendix A, which confirms that the mean effect is stable across the full range of $\rho$.
 
-```{r}
-#| label: rho-sensitivity-run
-
-# Note: this script takes approximately 6 minutes to run.
-source("Protocol_RhoSensitivity.R")
-```
-
-```{r}
-#| label: rho-sensitivity-figures
-#| eval: true
-
-library(knitr)
-
-include_graphics("Figure_RhoLikelihood.png")
-include_graphics("Figure_RhoIntercept.png")
-include_graphics("Figure_RhoVarianceComponents.png")
-```
-
-**What to look for.** The profile likelihood is maximized at $\rho = 0.5$, so the default value coincides with the likelihood-maximizing one in this dataset. The CHE intercept is not perfectly flat across the grid: it declines steadily from 0.194 at $\rho = 0$ to 0.161 at $\rho = 0.95$, confirming that the choice of $\rho$ does have some effect on the point estimate, though the change is modest relative to the estimate's standard error (which stays close to 0.018--0.019 throughout).
-
-The variance components also shift with $\rho$, in opposite directions: $\hat{\tau}$ (between-study heterogeneity) declines from 0.154 at $\rho = 0$ to 0.109 at $\rho = 0.95$, while $\hat{\omega}$ (within-study heterogeneity) rises from 0.147 to 0.174 over the same range. This reallocation follows mechanically from the change in the assumed within-study correlation: as $\rho$ increases, more of the observed similarity among a study's effect sizes is attributed to correlated sampling error rather than to a shared study-level true effect, so less heterogeneity is allocated between studies and correspondingly more within them. The reallocation is real but modest relative to the totals involved, and it does not change the qualitative picture that both components remain substantively important at any plausible value of $\rho$.
-
-For write-up purposes, the three figures above and this summary are typically sufficient for the main text of a manuscript. The full numeric grid, including $\hat{\tau}$ and $\hat{\omega}$ at every value of $\rho$, remains available in `Table_RhoSensitivity.xlsx` for verification, without needing to be reproduced in the document itself.
-
-After inspecting these figures, choose the value of $\rho$ to use throughout the main analysis. The default used in this protocol is $\rho = 0.5$.
+**Decision point.** Adopt a plausible constant value for $\rho$ ($\rho = 0.5$ by default) and, before proceeding to the five estimators in the next section, run the sensitivity analysis in Appendix A to confirm that the substantive conclusions do not depend on the value chosen. Report the value used together with the sensitivity analysis.
 
 ---
 
@@ -351,7 +332,7 @@ The CR2 standard errors are used for all inference throughout this protocol. The
 
 ## Likelihood ratio tests
 
-@tbl-table4 reports three likelihood ratio tests (see the note below the table for which comparison each one represents). A significant RE-vs-FE result indicates that between-study heterogeneity is present and that a fixed-effects model is inadequate. A significant HE-vs-RE result indicates that within-study heterogeneity (the $\omega^2$ component) is non-negligible, meaning that effect sizes vary meaningfully within studies beyond what is captured by a single study-level random effect. A significant CHE-vs-CE result indicates that the combination of correlated sampling errors and within-study heterogeneity fits the data better than correlated sampling errors alone. A direct likelihood ratio test of CHE against HE is not available because the two models use different covariance matrices. Informal evidence can nonetheless be obtained from the profile log-likelihood figure in Section 4: since HE is equivalent to CHE with $\rho = 0$, a profile log-likelihood that is maximized at $\rho > 0$ constitutes evidence in favor of CHE over HE.
+@tbl-table4 reports three likelihood ratio tests (see the note below the table for which comparison each one represents). A significant RE-vs-FE result indicates that between-study heterogeneity is present and that a fixed-effects model is inadequate. A significant HE-vs-RE result indicates that within-study heterogeneity (the $\omega^2$ component) is non-negligible, meaning that effect sizes vary meaningfully within studies beyond what is captured by a single study-level random effect. A significant CHE-vs-CE result indicates that the combination of correlated sampling errors and within-study heterogeneity fits the data better than correlated sampling errors alone. A direct likelihood ratio test of CHE against HE is not available because the two models use different covariance matrices; the choice between them is a choice about the assumed within-study correlation, made on substantive grounds rather than by likelihood comparison.
 
 These tests inform model selection, but they should not be treated as the sole criterion. The CHE model is the recommended default for most meta-analytic applications because it imposes the weakest assumptions about the dependence structure (Pustejovsky and Tipton, 2022). Even if one or more of the likelihood ratio tests fails to reach conventional significance levels, the researcher may prefer to retain CHE as the working model on substantive grounds.
 
@@ -389,7 +370,7 @@ knitr::asis_output(paste0(
 
 **What to look for.** The primary quantity of interest is the CHE intercept, which gives the overall mean effect after accounting for both between-study and within-study heterogeneity and for correlated sampling errors. The variance components $\hat{\tau}$ and $\hat{\omega}$ decompose total heterogeneity into its between-study and within-study portions. In this dataset, the two components are similar in magnitude ($\hat{\tau} = 0.127$, $\hat{\omega} = 0.157$ under CHE), indicating that heterogeneity is distributed roughly equally within and between studies. When $\hat{\omega}$ is large relative to $\hat{\tau}$, moderator variables that vary within studies (such as the type of outcome measure) are likely to be more informative than those that vary only between studies.
 
-**Decision point.** The likelihood ratio tests indicate whether the additional variance components of each model represent a statistically significant improvement in fit. These results, combined with the informal evidence from the profile log-likelihood figure in Section 4 that the REML log-likelihood is maximized at $\rho > 0$, inform the choice of working model. In this application, both sources of evidence support the CHE model, which is therefore selected as the preferred estimator for all subsequent analysis.
+**Decision point.** The likelihood ratio tests indicate whether the additional variance components of each model represent a statistically significant improvement in fit, and they inform the choice of working model. In this application, they support retaining the within-study variance component, and the CHE model is selected as the preferred estimator for all subsequent analysis on the substantive grounds set out above: it imposes the weakest assumptions about the dependence structure.
 
 ---
 
@@ -474,15 +455,19 @@ knitr::asis_output(paste0(
 ))
 ```
 
-**What to look for.** The FAT slope ($\hat{\beta}_1$) tests whether there is a statistically significant association between effect size and standard error. Strictly speaking, this is a test for small-study effects rather than publication bias specifically, the same distinction noted for the funnel plot above: a significant slope is consistent with selective reporting, but genuine heterogeneity or other design differences correlated with study precision can produce the same pattern. This qualification is specific to FAT-PET and PEESE (and the funnel plot), which infer selection indirectly from the size-precision relationship; it does not extend to the step-function selection models later in this section or to RoBMA in Section 9, which model the publication-selection mechanism directly via significance thresholds. The PET intercept ($\hat{\beta}_0$) in Panel B is the key quantity: it estimates the mean effect size net of this small-study effect, at average values of all control variables, for the CHE model. If this intercept is not statistically distinguishable from zero, it suggests that the literature may not contain a genuine effect beyond what selection, or another source of the small-study pattern, has induced.
+**What to look for.** The FAT slope ($\hat{\beta}_1$) tests whether there is a statistically significant association between effect size and standard error. Strictly speaking, this is a test for small-study effects rather than publication bias specifically, the same distinction noted for the funnel plot above: a significant slope is consistent with selective reporting, but genuine heterogeneity or other design differences correlated with study precision can produce the same pattern. This qualification is specific to FAT-PET and PEESE (and the funnel plot), which infer selection indirectly from the size-precision relationship; it does not extend to the step-function selection models later in this section or to RoBMA in Section 9, which model the publication-selection mechanism directly via significance thresholds.
 
-**Decision point.** Because CHE is the preferred estimator throughout this protocol, the key quantity is the CHE intercept in Panel B. If this intercept is statistically significant and positive, the researcher should proceed to the PEESE sensitivity analysis (Table 5S), because Stanley and Doucouliagos (2014) show that PET underestimates the mean effect when a genuine effect is present, and PEESE's quadratic correction is more appropriate in that case. Panel A is not used as the trigger because, when the standard error is correlated with study characteristics, the univariate intercept may conflate a small-study effect driven by selective reporting with one driven by systematic heterogeneity, rather than isolating the genuine effect net of either. Table 5S reports results for all five estimators regardless, giving a complete picture of sensitivity across estimators, but the PET-PEESE choice for the preferred estimate is determined solely by CHE.
+A further caution applies specifically to the FAT slope: simulation and empirical evidence show that Egger-type tests for funnel-plot asymmetry have low statistical power when the number of studies is small, as is typical in practice, so a non-significant FAT slope should not be interpreted as ruling out publication bias (Macaskill, Walter, and Irwig, 2001; Furuya-Kanamori et al., 2020).
+
+The PET intercept ($\hat{\beta}_0$) in Panel B is the key quantity: it estimates the mean effect size net of this small-study effect, at average values of all control variables, for the CHE model. If this intercept is not statistically distinguishable from zero, this is consistent with there being no genuine effect beyond what selection, or another source of the small-study pattern, has induced -- though a null result of this kind does not establish that no such effect exists.
+
+**Decision point.** Because CHE is the preferred estimator throughout this protocol, the key quantity is the CHE intercept in Panel B. Because the FAT slope's power to detect selective reporting can be limited, this protocol applies the PET correction and reports the resulting intercept regardless of whether the FAT slope itself is statistically significant, rather than treating a non-significant FAT slope as license to rely on the uncorrected mean effect. If this intercept is statistically significant and positive, the researcher should proceed to the PEESE sensitivity analysis (Table 5S), because Stanley and Doucouliagos (2014) show that PET underestimates the mean effect when a genuine effect is present, and PEESE's quadratic correction is more appropriate in that case. Panel A is not used as the trigger because, when the standard error is correlated with study characteristics, the univariate intercept may conflate a small-study effect driven by selective reporting with one driven by systematic heterogeneity, rather than isolating the genuine effect net of either. Table 5S reports results for all five estimators regardless, giving a complete picture of sensitivity across estimators, but the PET-PEESE choice for the preferred estimate is determined solely by CHE.
 
 ---
 
 ## PEESE Sensitivity
 
-Table 5S substitutes the squared standard error ($\text{SE}^2$) for the standard error in the FAT-PET specification. Because the quadratic correction assumes the bias mechanism is weaker when a genuine effect is present, the PEESE intercept will generally be larger (less downward-adjusted) than the PET intercept. Table 5S is reported for all researchers as a transparency check; it becomes the preferred specification only if the CHE PET intercept in Panel B of @tbl-table5 is statistically significant and positive, in which case Stanley and Doucouliagos (2014) show that PET underestimates the true effect and PEESE's quadratic correction is more appropriate.
+Table 5S substitutes the squared standard error ($\text{SE}^2$) for the standard error in the FAT-PET specification. Because the quadratic correction assumes the bias mechanism is weaker when a genuine effect is present, the PEESE intercept will generally be larger (less downward-adjusted) than the PET intercept. Table 5S is reported for all researchers as a transparency check; it becomes the preferred specification only if the CHE PET intercept in Panel B of @tbl-table5 is statistically significant and positive.
 
 ### Run the script
 
@@ -615,25 +600,25 @@ knitr::asis_output('<div style="margin-top: 0.25em; text-align: left;"><p><em>No
 
 **What to look for.** The CHE-ISCW-PET-PEESE column tests whether CHE-PET-PEESE's linear correction, on its own, fully captures the effects of publication selection: compare its bias-corrected intercept to the CHE-PET-PEESE intercept in @tbl-table5. Close agreement is reassuring, since it means the extra weight ISCW places on large, less bias-prone studies is not finding anything the standard linear correction missed. Disagreement would suggest the opposite, that the linear correction alone is leaving some publication-selection-induced bias uncorrected. Either reading, however, is only as trustworthy as the weights behind it, so it should be checked against how those weights are distributed across studies before a conclusion is drawn, as discussed below.
 
-The more important comparison is between the two PML step-function models, since they do not share PET-PEESE's assumption that selection is a smooth function of standard error alone, indifferent to the sign of the result. The lambda parameters are the key thing to inspect: evidence that they differ substantially across categories, rather than clustering uniformly near 1, indicates that PET-PEESE's functional form is not fully capturing the selection process at work in this literature.
+The two PML step-function models more directly address selection processes that depart from PET-PEESE's linear approach. The lambda parameters are the key thing to inspect: evidence that they differ substantially across categories, rather than clustering uniformly near 1, indicates that PET-PEESE's functional form is not fully capturing the selection process at work in this literature.
 
-**Decision point.** Before relying on the CHE-ISCW-PET-PEESE estimate, check how its weights are distributed across studies. Inverse sampling covariance weighting is effectively a fixed-effect (FE) weighting scheme: it weights each effect size by the inverse of its sampling variance alone. The consequence is the estimate of the overall effect is concentrated heavily on the largest studies in a sample. Thus, one should be wary when a small number of studies received an inordinate amount of weight. That would appear to be the case in this instance: per @tbl-table3, the three largest studies account for 63.3 percent of total FE weight, compared to only 4.0 percent under RE and 4.6 percent under HE. This means the CHE-ISCW-PET-PEESE estimate is less a summary of the literature as a whole than a reflection of a handful of dominant studies. As a result, the CHE-ISCW-PET-PEESE estimate is discounted here, and we focus on the PML selection models instead.
+**Decision point.** Before relying on the CHE-ISCW-PET-PEESE estimate, check how its weights are distributed across studies. Inverse sampling covariance weighting is effectively a fixed-effect (FE) weighting scheme: it weights each effect size by the inverse of its sampling variance alone. The consequence is that the estimate of the overall effect is concentrated heavily on the largest studies in the sample. Thus, one should be wary when a small number of studies receives an inordinate amount of weight. That would appear to be the case in this instance: per @tbl-table3, the three largest studies account for 63.3 percent of total FE weight, compared to only 4.0 percent under RE and 4.6 percent under HE. This means the CHE-ISCW-PET-PEESE estimate is less a summary of the literature as a whole than a reflection of a handful of dominant studies. As a result, the CHE-ISCW-PET-PEESE estimate is discounted here, and we focus on the PML selection models instead.
 
-The associated lambda parameters quantify the estimated degree of selection at each threshold: values close to 1 indicate little selection (a result in that category is about as likely to be reported as a significant positive one); values far below 1 indicate strong selection against that category. $\hat{\lambda}_1$, the relative reporting probability for positive but non-significant results, is estimated at 0.75 in the one-step model and 0.79 in the two-step model, with confidence intervals that include 1 in both cases -- the data do not provide strong evidence of selection against results that are correctly signed but insignificant. 
+The associated lambda parameters quantify the estimated degree of selection at each threshold: values close to 1 indicate little selection (a result in that category is about as likely to be reported as a significant positive one); values far below 1 indicate strong selection against that category.
 
-$\hat{\lambda}_2$, available only in the two-step model, is the relative reporting probability for wrong-signed results, and is estimated at 0.27, with a bootstrap confidence interval that excludes 1: results pointing in the wrong direction are substantially under-reported relative to significant positive ones.
+$\hat{\lambda}_1$, the relative reporting probability for positive but non-significant results, is estimated at 0.75 in the one-step model and 0.79 in the two-step model, with confidence intervals that include 1 in both cases. Consequently, the data do not provide strong evidence of selection against results that are correctly signed but insignificant.
+
+$\hat{\lambda}_2$, available only in the two-step model, is the relative reporting probability for wrong-signed results, and is estimated at 0.27, with a bootstrap confidence interval that excludes 1. This suggests that results pointing in the wrong direction are substantially under-reported relative to significant positive ones.
 
 This asymmetry is the key finding of the step-function models, and it is one that PET-PEESE cannot represent by construction. PET-PEESE models publication bias as a smooth, linear function of the standard error alone, and its correction never depends on the sign of the reported effect. As a result, two results that share the same standard error, one wrong-signed and one merely underpowered but correctly signed, receive an identical predicted correction.
 
 The two-step model's evidence that these two categories are treated very differently by the selection process -- weak evidence of selection against underpowered-but-correctly-signed results, but strong evidence of selection against wrong-signed ones -- indicates that the regression-based approach is, by itself, missing a real feature of how this literature's evidence base was shaped. This limitation motivates the RoBMA approach taken up in Section 9, which averages over selection models that can represent threshold-based, sign-sensitive selection mechanisms rather than assuming the smooth, standard-error-only form that PET-PEESE requires.
 
-For write-up purposes, the qualitative comparison discussed above is typically sufficient for the main text of a manuscript; the table itself is best relegated to a supplementary or online appendix, where it remains available for verification without consuming space in the main text.
-
 ---
 
 # Meta-Regression
 
-The meta-regression model extends the intercept-only framework to include substantive predictors that may explain heterogeneity in effect sizes. The purpose of this section is twofold: to identify which study characteristics are genuinely associated with variation in effect sizes, and to provide the CHE estimates from which the best-practice predictions in @tbl-table7 are derived. @tbl-table6 presents a full meta-regression with all 19 regressors -- the standard error (`sez`) plus 18 study and publication characteristics -- estimated by two methods: Bayesian Model Averaging (BMA) and the CHE model. The two panels serve distinct purposes. Panel A reports the estimates from both methods. Panel B synthesizes them into a moderator-by-moderator interpretation. The guiding principle is: **BMA informs interpretation; CHE determines estimation and inference.**
+The meta-regression model extends the intercept-only framework to include substantive predictors that may explain heterogeneity in effect sizes. The purpose of this section is twofold: to identify which study characteristics are genuinely associated with variation in effect sizes, and to provide the CHE estimates from which the best-practice predictions in @tbl-table7 are derived. @tbl-table6 presents a full meta-regression with all 19 regressors -- the standard error (`sez`) plus 18 study and publication characteristics -- estimated by two methods: Bayesian Model Averaging (BMA) and the CHE model. The two panels serve distinct purposes. Panel A reports the estimates from both methods. Panel B synthesizes them into a moderator-by-moderator interpretation. The guiding principle is: BMA informs interpretation; CHE determines estimation and inference.
 
 ## Why two methods?
 
@@ -643,11 +628,11 @@ BMA averages over a large number of candidate models, weighting each by its post
 
 It is important to note, however, that the BMA implementation here uses OLS (via the BMS package), which ignores both inverse-variance weighting and the within-study dependence structure. This means that BMA posterior inclusion probabilities (PIPs) should not be treated as calibrated probabilities of true moderator importance, and BMA coefficient means should not be used for prediction. BMA is reported as a descriptive diagnostic of model uncertainty, not as an inferential tool.
 
-Readers familiar with common practice may wonder why the protocol does not use model selection, whether BMA-based or otherwise, to arrive at a reduced set of moderators for a final specification. The choice is deliberate. With 83 studies and 957 estimates, the full 19-regressor CHE model is comfortably estimable, so there is no practical need to shrink the moderator set. Statistically, inference conducted after a selection step conditions on the selected model and ignores the uncertainty in the selection itself, which overstates the precision of the resulting estimates. And the BMA implementation used here could not play the selection role in any case, since its OLS basis means its inclusion probabilities are not calibrated measures of moderator importance. The protocol therefore retains all moderators in a single specification and, in Section 8, lets substantive judgment about best research practice, rather than statistical significance, determine how the model is used for prediction.
+Readers familiar with common practice may wonder why the protocol does not use model selection, whether BMA-based or otherwise, to arrive at a reduced set of moderators for a final specification. The choice is deliberate. With 83 studies and 957 estimates, the fully specified CHE model is comfortably estimable, so there is no practical need to shrink the moderator set. Statistically, inference conducted after a selection step conditions on the selected model and ignores the uncertainty in the selection itself, which overstates the precision of the resulting estimates. While BMA does address model uncertainty, its OLS basis means its inclusion probabilities cannot be used to assess moderator importance for the reasons mentioned above. The protocol therefore retains all moderators in a single specification and, in Section 8, lets substantive judgment about best research practice, rather than statistical significance, determine how the model is used for prediction.
 
-The CHE meta-regression is the primary inferential model. It estimates a single specification with all 19 regressors, maintains the correct dependence structure via the imputed block-diagonal covariance matrix, and reports CR2 clustered standard errors. CHE coefficients, standard errors, and p-values are the basis for all inferential conclusions and for the best-practice predictions in @tbl-table7. This model still adjusts for publication bias in the same way as the CHE-PET-PEESE regression in @tbl-table5, through the linear `sez` term, so it inherits the limitation demonstrated in Section 6's robustness checks: it cannot represent selection that operates on the sign of the effect rather than only its significance. The moderator-adjusted RoBMA meta-regression in Section 9 revisits this same specification using a selection mechanism that is not restricted to that functional form.
+The CHE meta-regression is the primary inferential model. It estimates a single specification with all 19 regressors, maintains the correct dependence structure via the imputed block-diagonal covariance matrix, and reports CR2 clustered standard errors. CHE coefficients, standard errors, and p-values are the basis for all inferential conclusions and for the best-practice predictions in @tbl-table7. This model still adjusts for publication bias in the same way as the CHE-PET-PEESE regression in @tbl-table5, through the linear `sez` term, so it inherits the limitation demonstrated in Section 6's robustness checks: it cannot represent selection that operates on the sign of the effect rather than only its significance.
 
-Note that the control variables are *not* centered in @tbl-table6 (unlike in @tbl-table5). The intercept in the full meta-regression therefore has no direct substantive interpretation -- it corresponds to the mean effect when all variables take the value zero, which is typically a counterfactual scenario. Meaningful predictions from this model require recentering the covariates, which is done in @tbl-table7.
+Note that the control variables are *not* centered in @tbl-table6 (unlike in @tbl-table5). The intercept in the full meta-regression therefore has no direct substantive interpretation -- it corresponds to the mean effect when all variables take the value zero, which is typically a counterfactual scenario.
 
 ## What to look for
 
@@ -702,7 +687,7 @@ The intercept-only CHE model (@tbl-table4) estimates the mean effect averaging o
 
 ## Constructing best-practice predictions
 
-@tbl-table7 reports best-practice predictions for two scenarios -- Non-OECD/Europe and OECD/Europe -- in order to identify regional differences that may exist in how social capital interacts with economic growth. Both sets of predictions use the CHE estimates from @tbl-table6 as discussed previously. Table 7 applies those estimates to the best-practice covariate values. The predictions are obtained by recentering the control variables in the CHE meta-regression at their best-practice values, so that the model intercept directly equals the conditional prediction at those values.
+@tbl-table7 reports best-practice predictions for two scenarios -- Non-OECD/Europe and OECD/Europe -- in order to identify regional differences that may exist in how social capital interacts with economic growth. Both sets of predictions use the CHE estimates from @tbl-table6 as discussed previously. Table 7 applies those estimates to the best-practice covariate values. The predictions are obtained by centering the control variables in the CHE meta-regression at their best-practice values rather than at zero: each covariate is redefined as its raw value minus its best-practice value, so that it equals zero exactly when a study matches best practice on that dimension. For example, since cognitive social capital is the best-practice choice, the centered version of that variable equals `SC1_Cognitive` minus 1, which is zero precisely for studies that use cognitive social capital; the same construction is applied to all 19 regressors. Once every covariate is centered this way, a hypothetical study matching best practice on every dimension has every centered covariate equal to zero simultaneously, so the model intercept -- by definition, the predicted value when every predictor is zero -- directly equals the best-practice prediction, with no separate calculation required.
 
 The predictions deliberately use the full 19-regressor model from @tbl-table6, including moderators classified in Panel B as showing no evidence of an effect. Excluding a non-significant moderator would not avoid an assumption but make one: it would force that moderator's contribution to the prediction to zero, when non-significance means only that the data cannot distinguish its effect from zero. Retaining all moderators instead lets each contribute its estimated effect, with the accompanying imprecision flowing honestly into the confidence and prediction intervals through the full model's covariance matrix.
 
@@ -750,7 +735,7 @@ knitr::asis_output(paste0(
 
 **What to look for.** The confidence interval captures uncertainty about the mean effect at the specified best-practice covariate values, holding the model fixed. The prediction interval is wider because it also incorporates the residual effect heterogeneity: even among studies that match the best-practice profile, effects will vary due to factors not captured by the model. If the prediction interval is very wide relative to the confidence interval, substantial unexplained heterogeneity remains and the best-practice estimate should be interpreted cautiously as a central tendency rather than a precise forecast.
 
-It is also worth comparing the size of these best-practice estimates to the CHE PET intercept in Panel B of @tbl-table5 (0.042 in Fisher's z), which nets out the same publication-bias correction but evaluates the 18 study-characteristic moderators at their sample averages rather than at best-practice values. The best-practice predictions (-0.022 for non-OECD/Europe, -0.043 for OECD/Europe) are, like this benchmark, small in magnitude and statistically indistinguishable from zero. The shift induced by recentering the meta-regression at an idealized set of covariate values is not trivial (for the OECD/Europe scenario it modestly exceeds the Doucouliagos (2011) small-effect threshold), but it is smaller than the shift induced by the publication-bias correction itself, and it leaves the estimate in the same place: near zero. This suggests that, in this literature, publication-bias correction -- not adjustment for study design and methodology -- is doing most of the work in bringing the raw, uncorrected CHE mean (0.175, @tbl-table4) down toward zero.
+It is also worth comparing the size of these best-practice estimates to the CHE PET intercept in Panel B of @tbl-table5 (0.042 in Fisher's z), which nets out the same publication-bias correction but evaluates the 18 study-characteristic moderators at their sample averages rather than at best-practice values. The best-practice predictions (-0.022 for non-OECD/Europe, -0.043 for OECD/Europe) are, like this benchmark, small in magnitude and statistically indistinguishable from zero. The shift induced by centering the meta-regression at an idealized set of covariate values is not trivial (for the OECD/Europe scenario it modestly exceeds the Doucouliagos (2011) small-effect threshold), but it is smaller than the shift induced by the publication-bias correction itself, and it leaves the estimate in the same place: near zero. This suggests that, in this literature, publication-bias correction -- not adjustment for study design and methodology -- is doing most of the work in bringing the raw, uncorrected CHE mean (0.175, @tbl-table4) down toward zero.
 
 ---
 
@@ -768,7 +753,7 @@ The RoBMA analysis proceeds in five steps. The first fits an intercept-only mult
 
 ## Software Setup
 
-The RoBMA analysis requires the `RoBMA` package (Bartoš et al., 2023). This package must be installed before running any script in this section.
+The RoBMA analysis requires the `RoBMA` package (Bartoš et al., 2023). This package must be installed before running any script in this section. This package also requires JAGS to be installed on your system (see Software Setup in the Introduction); JAGS is not installed by `install.packages()`.
 
 ```{r}
 #| label: robma-install
@@ -788,13 +773,13 @@ library(readxl)
 
 ## The Z-Plot
 
-The starting point for the RoBMA analysis is a visual inspection of the z-statistic distribution. The z-plot plays the same role for the RoBMA analysis that the funnel plot (@fig-figure2) plays for the PET-PEESE analysis in Section 6: a visual, motivational diagnostic that precedes the formal estimates and suggests which selection mechanisms are at work. Each effect size in the database can be converted to a z-statistic by dividing it by its standard error. Under a model with no publication bias, the distribution of these z-statistics should be smooth and unimodal, reflecting the underlying distribution of true effects combined with sampling variability. When publication bias is present, the distribution is distorted: observations accumulate at thresholds that carry particular significance for the probability of publication.
+The starting point for the RoBMA analysis is a visual inspection of the z-statistic distribution. The z-plot plays the same role for the RoBMA analysis that the funnel plot (@fig-figure2) plays for the PET-PEESE analysis in Section 6: a visual, motivational diagnostic that precedes the formal estimates and suggests which selection mechanisms are at work. Each effect size in the database can be converted to a z-statistic by dividing it by its standard error. Under a model with no publication bias, the distribution of these z-statistics generally should be smooth and unimodal, reflecting the underlying distribution of true effects combined with sampling variability. When publication bias is present, the distribution is distorted: observations accumulate at thresholds that carry particular significance for the probability of publication.
 
 The z-plot displays the empirical histogram of z-statistics alongside the model-averaged curve implied by the fitted RoBMA model. This curve is a fitted plot representing the family of selection models included in RoBMA, weighted by their posterior probabilities, and is shown with a pointwise 95% uncertainty band.
 
 For this step, an intercept-only multilevel RoBMA model is fitted on the full dataset. The multilevel structure accounts for the dependence among effect sizes nested within studies, consistent with the CHE approach used throughout the preceding sections. The model is specified with `measure = "ZCOR"` because the input is Fisher's z-transformed partial correlations, and with `cluster = newid` to define the study-level clustering. The fitted model object is saved as `RoBMA_intercept_only.rds` so that Table 8 can load it without refitting.
 
-**A note on MCMC convergence.** Before interpreting output from this or any subsequent RoBMA model, the researcher should confirm that the MCMC chains have converged. RoBMA applies automatic convergence checks to every fitted model, by default requiring an R-hat below 1.05 and an effective sample size of at least 500, and prints a warning whenever a model fails them. These warnings should not be ignored: estimates from a non-converged model are not trustworthy, however plausible they may look. If a warning appears, the remedy is to increase the sampling effort (the `sample`, `burnin`, and `adapt` settings) or to refit with `autofit = TRUE`, which extends the chains automatically until the convergence criteria are met, rather than to interpret the estimates as they stand. Visual checks are also available through `plot_diagnostic()`, which produces trace, autocorrelation, and density plots for individual parameters. The same checks apply to every RoBMA model fitted in this section, including the meta-regression in @tbl-table10.
+**A note on MCMC convergence.** Before interpreting output from this or any subsequent RoBMA model, the researcher should confirm that the MCMC chains have converged. RoBMA applies automatic convergence checks to every fitted model, by default requiring an R-hat below 1.05 and an effective sample size of at least 500, and prints a warning whenever a model fails them. These warnings should not be ignored. Estimates from models showing convergence problems should be interpreted with caution, although the seriousness of the problem depends on the parameter and diagnostic involved. If a warning appears, the remedy is to increase the sampling effort (the `sample`, `burnin`, and `adapt` settings) or to refit with `autofit = TRUE`, which extends the chains automatically until the convergence criteria are met, rather than to interpret the estimates as they stand. Visual checks are also available through `plot_diagnostic()`, which produces trace, autocorrelation, and density plots for individual parameters. A worked example, showing these diagnostics for the meta-regression in @tbl-table10, appears directly below that table.
 
 ### Run the script
 
@@ -818,7 +803,7 @@ knitr::include_graphics("Figure3_Zplot.png")
 
 **What to look for.** The z-plot reveals publication bias through two distinct features of the empirical histogram that should be read against the smooth model curve. The first is a spike at z = 0, the boundary between positive and negative effect sizes. The accumulation of z-statistics just above zero reflects selection for the correct sign of the effect: studies showing a positive association between social capital and economic growth are more likely to be reported than studies showing a negative association, regardless of statistical significance. 
 
-The second is a spike at z ≈ 1.96, the conventional threshold for two-sided statistical significance at the five percent level. The excess of z-statistics just above this threshold, relative to the model curve, is the classic signature of selective reporting based on significance. 
+The second is a spike at z ≈ 1.96, the conventional threshold for two-sided statistical significance at the five percent level. The sharp changes in the histogram at the directional and statistical-significance thresholds indicate strong selective reporting. The fitted RoBMA curve highlights these discontinuities, although it does not fully capture their magnitude. 
 
 The model-averaged curve is the fit of RoBMA's candidate models, weighted by their posterior probabilities, to the observed histogram. The bias-corrected mean effect is obtained separately, from the model-averaged parameter estimates reported in @tbl-table8.
 
@@ -830,7 +815,7 @@ That two different estimation approaches, one a smooth Bayesian model average, t
 
 ## Comparing Publication Bias Corrections
 
-@tbl-table8 places the RoBMA bias-corrected mean alongside the two estimates from the preceding sections: the uncorrected CHE mean from @tbl-table4 and the FAT-PET corrected mean from @tbl-table5. The purpose is to determine whether RoBMA and FAT-PET are telling the same substantive story. This comparison is the analytical pivot of the RoBMA section: if the two corrected estimates agree, the additional complexity of RoBMA is not adding new information; if they diverge, the source and implications of the divergence must be examined further.
+@tbl-table8 places the RoBMA bias-corrected mean alongside the two estimates from the preceding sections: the uncorrected CHE mean from @tbl-table4 and the FAT-PET corrected mean from @tbl-table5. The purpose is to determine whether RoBMA and FAT-PET are telling the same substantive story at the pooled level. If the two corrected estimates agree, RoBMA is not adding new information about the pooled mean; if they diverge, the source and implications of the divergence must be examined further. This pooled comparison is only the first step: the moderator-adjusted analysis in Tables 9 through 11 addresses a distinct question and is carried out regardless, since agreement about the pooled mean does not guarantee agreement once study characteristics are taken into account.
 
 The FAT-PET corrected estimate used in this comparison is the PET intercept from the CHE model in @tbl-table5 Panel B. In the analysis of this dataset, no intercept in @tbl-table5 Panel B reached conventional statistical significance, so the PEESE sensitivity analysis (Table 5S) was not triggered and the PET intercept is the appropriate reference point for the publication bias correction.
 
@@ -857,9 +842,11 @@ read_excel("Table8_RoBMA_Comparison.xlsx", sheet = "BayesFactors") |>
   knitr::kable(caption = "Panel B: RoBMA component inclusion Bayes factors", digits = 3)
 ```
 
-**What to look for.** In Panel A, the key comparison is between the FAT-PET corrected mean and the RoBMA corrected mean. If these two estimates are close in magnitude, the conclusions of the preceding sections are robust to the choice of correction method and RoBMA can be reported as a corroborating sensitivity check. If they diverge substantially, the analyst should proceed to the RoBMA meta-regression in Tables 9 through 11 to investigate whether the divergence persists after conditioning on study characteristics. In Panel B, the inclusion Bayes factors characterize the evidence for each model component. A Bayes factor above 100 is conventionally considered decisive evidence; values substantially above this threshold indicate that the data are overwhelmingly consistent with the presence of that component.
+**What to look for.** In Panel A, the key comparison is between the FAT-PET corrected mean and the RoBMA corrected mean. If these two estimates are close in magnitude, the pooled conclusions of the preceding sections are robust to the choice of correction method; if they diverge substantially, the divergence is itself a finding worth examining. In this dataset, the two methods diverge substantially. FAT-PET reduces the raw CHE mean of 0.175 by roughly 76 percent, to 0.042, an estimate whose confidence interval comfortably includes zero (@tbl-table5). RoBMA's intercept-only model reduces the same raw mean by only about 31 percent, to 0.121, with a 95% credible interval of [0.073, 0.170] that excludes zero entirely. At the pooled level, then, FAT-PET's linear correction removes essentially all of the raw association, while RoBMA's model-averaged correction leaves an effect that remains credibly different from zero -- a first indication that the two frameworks are not simply reweighted versions of the same conclusion. The gap between the two corrected means, roughly 0.08 in Fisher's z, itself exceeds the Doucouliagos (2011) small-effect benchmark used elsewhere in this protocol.
 
-**Decision point.** If the FAT-PET and RoBMA corrected means are substantively similar, report @tbl-table8 as a robustness check and stop. If they diverge, proceed to @tbl-table9.
+In Panel B, the inclusion Bayes factors characterize the evidence for each model component. A Bayes factor above 100 is conventionally considered decisive evidence; here all three components -- the presence of an overall effect, genuine between-study heterogeneity, and publication bias -- reach RoBMA's reporting ceiling of 59,999, with posterior inclusion probabilities of 1. The evidence for all three is about as strong as this method can register, which is itself informative: whatever the RoBMA-corrected mean turns out to be, the intercept-only model is unambiguous that there is a nonzero effect to correct, real between-study heterogeneity, and severe publication bias in this literature.
+
+**Decision point.** Report @tbl-table8 as a robustness check comparing the FAT-PET and RoBMA corrected means, and proceed to @tbl-table9 regardless of whether they agree. Agreement at the pooled level would not have guaranteed that the moderator-level results in @tbl-table10 also agree, and the disagreement found here does not preempt that separate analysis either.
 
 ---
 
@@ -869,7 +856,9 @@ Before fitting the RoBMA meta-regression, it is necessary to determine which of 
 
 ### The BIC drop-one approach
 
-The pre-selection strategy uses the Bayesian Information Criterion (BIC) applied to the CHE meta-regression from @tbl-table6. BIC is chosen over less conservative criteria such as AIC for two reasons. Its heavier penalty on additional parameters suits the purpose of this step, which is to reduce the moderator set aggressively enough to make the RoBMA meta-regression computationally feasible. And BIC approximates the log marginal likelihood used in Bayesian model comparison, making it a natural screening criterion for a model that will itself be estimated in a Bayesian framework. The full CHE model with all 18 moderators plus the standard error (`sez`) is estimated by maximum likelihood rather than restricted maximum likelihood, because BIC comparisons are only valid across models estimated on the same likelihood basis. When models differ in their fixed effects -- as they do here, since each drop-one model omits a different moderator -- REML log-likelihoods are not comparable and ML must be used instead. Each of the 18 moderators is then dropped from the model one at a time, and the change in BIC relative to the full model is recorded. A positive delta-BIC -- meaning BIC increased when the variable was dropped -- indicates that the variable improves fit and should be retained. A negative delta-BIC indicates that the variable can be excluded without penalty.
+The pre-selection strategy uses the Bayesian Information Criterion (BIC) applied to the CHE meta-regression from @tbl-table6. BIC is chosen over less conservative criteria such as AIC for two reasons. Its heavier penalty on additional parameters suits the purpose of this step, which is to reduce the moderator set aggressively enough to make the RoBMA meta-regression computationally feasible. And BIC approximates the log marginal likelihood used in Bayesian model comparison, making it a natural screening criterion for a model that will itself be estimated in a Bayesian framework.
+
+The full CHE model with all 18 moderators plus the standard error (`sez`) is estimated by maximum likelihood rather than restricted maximum likelihood, because BIC comparisons are only valid across models estimated on the same likelihood basis. When models differ in their fixed effects -- as they do here, since each drop-one model omits a different moderator -- REML log-likelihoods are not comparable and ML must be used instead. Each of the 18 moderators is then dropped from the model one at a time, and the change in BIC relative to the full model is recorded. A positive delta-BIC -- meaning BIC increased when the variable was dropped -- indicates that the variable improves fit and should be retained. A negative delta-BIC indicates that the variable can be excluded without penalty.
 
 It is important to note that `sez` is included in the CHE models for this selection exercise but is not itself a candidate for dropping, and it will not be carried forward into the RoBMA meta-regression. The reason is that RoBMA corrects for publication bias internally through its model-averaging framework, which includes both regression-based and selection-model approaches. Adding `sez` as an explicit moderator in the RoBMA meta-regression would double-count the precision effect and conflate the publication bias correction with the substantive moderator analysis.
 
@@ -909,21 +898,29 @@ knitr::asis_output(paste0(
 ))
 ```
 
-**What to look for.** The delta-BIC column is the key output. Variables with a positive delta-BIC are retained for the RoBMA meta-regression; those with a negative delta-BIC are excluded. Convergence failures are treated as retains and should be noted explicitly in reporting. The researcher should also consider whether any moderator excluded by BIC has a strong theoretical rationale that might justify its inclusion regardless of the BIC result. Note that the four regional dummies will be added to the Table 10 model regardless of their BIC performance, since they are required for the best-practice predictions in Table 11.
+**What to look for.** The delta-BIC column is the key output. Variables with a positive delta-BIC are retained for the RoBMA meta-regression; those with a negative delta-BIC are excluded. Convergence failures are treated as retains and should be noted explicitly in reporting. The researcher should also consider whether any moderator excluded by BIC has a strong theoretical rationale that might justify its inclusion regardless of the BIC result. Note that one regional dummy, Reg_OECDEurope, will be added to the Table 10 model regardless of its BIC performance, since it is required for the best-practice predictions in Table 11 (see the Model specification subsection below for why only one of the four regional dummies is carried forward). In this dataset, only one of the 18 moderators, Endogeneity: FE (delta-BIC = 1.69), is retained; every other moderator shows a negative delta-BIC and is dropped, with no convergence failures in this run.
 
 ---
 
 ## RoBMA Meta-Regression
 
-@tbl-table10 presents the multilevel RoBMA meta-regression with the moderators retained from @tbl-table9, plus the four regional dummies needed for @tbl-table11. Its purpose is twofold: to estimate which study characteristics are genuinely associated with variation in effect sizes after correcting for publication bias, and to provide the model-averaged coefficients from which the best-practice predictions in @tbl-table11 are derived. 
+@tbl-table10 presents the multilevel RoBMA meta-regression. Its purpose is twofold: to estimate which study characteristics are genuinely associated with variation in effect sizes after correcting for publication bias, and to provide the model-averaged coefficients from which the best-practice predictions in @tbl-table11 are derived.
 
 This provides an alternative, arguably more credible, answer to the heterogeneity question than @tbl-table6 because the CHE meta-regression in @tbl-table6 corrects for publication bias through a single linear `sez` term. This implicitly assumes selective reporting operates uniformly across the sample, regardless of moderator values. If instead the severity of selective reporting depends on those same study characteristics, the `sez` term cannot capture that interaction. The resulting bias is then absorbed into the moderator coefficients themselves, contaminating the estimated moderator effects. RoBMA addresses this by estimating publication bias jointly with moderator effects, using a model-averaged combination of selection mechanisms rather than a single fixed linear form.
 
 ### Model specification
 
-The moderators entered in the model are those retained by the BIC pre-selection in @tbl-table9. In addition, all four regional dummy variables (Reg_OECDEurope, Reg_US, Reg_Africa, and Reg_Asia, with Reg_Other as the omitted reference category) are included regardless of their BIC performance, because they are required to construct the two best-practice scenarios in @tbl-table11. This mirrors the approach in @tbl-table6 and @tbl-table7, where all four regional dummies were included with Reg_Other as the reference.
+Continuous moderators are standardized internally by RoBMA, making the prior distributions scale-invariant and centering the intercept on the grand mean effect. This means raw covariate values can be passed directly to the prediction step in @tbl-table11 without manual standardization. The standard error (`sez`) is not included as a moderator, for the reasons described above.
 
-The standard error (`sez`) is not included as a moderator, for the reasons described above. Continuous moderators are standardized internally by RoBMA, making the prior distributions scale-invariant and centering the intercept on the grand mean effect. This means raw covariate values can be passed directly to the prediction step in @tbl-table11 without manual standardization. Categorical moderators use mean-difference contrasts by default, modeling each category's deviation from the grand mean rather than from a single reference category. The model is fit using standard MCMC settings with parallel chains, and the fitted model object is saved as `RoBMA_metaregression.rds` for use in Table 11.
+Binary moderators are declared as factors rather than left as 0/1 integers, which matters in RoBMA specifically: a numeric predictor is treated as continuous and standardized, placing the continuous-predictor prior on the wrong scale for a binary indicator, whereas a factor receives the categorical-moderator prior. For the contrast coding of those factors we keep RoBMA's default mean-difference (meandif) contrasts, under which each level is modeled as a deviation from the grand mean and the intercept corresponds to the grand-mean effect. The alternative is treatment (dummy) coding, which places the intercept at a chosen reference level and expresses each coefficient as the difference from that reference.
+
+We retain the meandif default for two reasons. First, it is label-invariant: the results do not depend on which level of a factor is designated the reference, which is desirable here because several of the moderators, the regional indicators in particular, have no natural default category. Second, and more consequentially for this document, the meandif intercept is itself the quantity we report as the unconditional RoBMA corrected mean. It is the model-averaged, publication-bias-corrected mean for an average study, evaluated with the continuous moderator at its mean and the factor moderators averaged symmetrically across their levels, and it is the direct analogue of the FAT-PET intercept in Panel B of @tbl-table5, which is read at the moderator means. The two therefore enter @tbl-table12 as a genuine like-for-like comparison.
+
+With these general modeling choices in place, the moderator actually retained from @tbl-table9's BIC pre-selection is Endogeneity: FE. One additional regional dummy, Reg_OECDEurope, is included regardless of its BIC performance, because it is required to construct the two best-practice scenarios in @tbl-table11.
+
+The model is fit using standard MCMC settings with parallel chains, and the fitted model object is saved as `RoBMA_metaregression.rds` for use in Table 11.
+
+The current multilevel RoBMA framework does not allow for correlated effects, the "C" in CHE. It is instead based on a hierarchical-effects (HE) structure, which decomposes heterogeneity into between- and within-cluster components without assuming a correlation between multiple effect-size estimates drawn from the same study. Future releases of RoBMA are planned to add correlated-effects models directly in the Bayesian setting, which would allow a genuine CHE-style specification to be estimated within RoBMA's model-averaging framework.
 
 ### Run the script
 
@@ -956,9 +953,39 @@ read_excel("Table10_RoBMA_MetaRegression.xlsx", sheet = "CommonEstimates") |>
   knitr::kable(caption = "Panel D: Heterogeneity and heterogeneity-allocation estimates", digits = 3)
 ```
 
-**What to look for.** Panel A confirms that evidence for an effect, heterogeneity, and publication bias all remain decisive after conditioning on the moderators. The substantive interpretation of the meta-regression itself happens in the panels that follow.
+**Convergence diagnostics.** As a worked example of the check described in Section 9.3, the table below reports the R-hat and effective sample size (ESS) for every parameter in this model.
 
-Panel B reports the moderator inclusion probabilities. These are not directly comparable to the BMA posterior inclusion probabilities in @tbl-table6: BMA is estimated by OLS, which ignores both inverse-variance weighting and the within-study dependence structure that this protocol is built around. RoBMA's PIPs are estimated within a multilevel model that respects the same clustered dependence structure as the CHE model, and that jointly corrects for publication bias rather than treating it as a separate linear term. 
+```{r}
+#| label: table10-diagnostics
+#| eval: true
+
+diag_tbl <- data.frame(
+  Parameter = c("intercept", "tau", "rho", "Endog_FE", "Reg_OECDEurope"),
+  `R-hat`   = c(1.000, 1.000, 1.000, 1.002, 1.039),
+  ESS       = c(889, 9071, 9106, 1106, 1119),
+  check.names = FALSE
+)
+
+diag_tbl |> knitr::kable(caption = "MCMC convergence diagnostics for the Table 10 meta-regression", digits = 3)
+```
+
+```{r}
+#| label: table10-diagnostics-note
+#| eval: true
+
+knitr::asis_output(paste0(
+  '<div style="margin-top: 0.25em; text-align: left;"><p><em>Note: Diagnostics obtained from ',
+  '<code>summary(fit, diagnostics = TRUE)</code>, run on the saved <code>RoBMA_metaregression.rds</code> ',
+  'object. Every parameter is comfortably inside the R-hat &lt; 1.05 / ESS ≥ 500 bar described ',
+  'in Section 9.3, so the estimates reported above can be interpreted with confidence. PET and PEESE ',
+  'are omitted from this table because they carry effectively zero posterior weight in this model, ',
+  'so RoBMA reports no meaningful R-hat or ESS for them.</em></p></div>\n\n'
+))
+```
+
+**What to look for.** Panel A shows that heterogeneity and publication bias remain decisive after conditioning on the moderators (inclusion Bayes factors exceeding 59,999 for both). The Effect component itself is moderately supported: its inclusion Bayes factor is 10.080 (posterior probability 0.910), meaning the data favor an overall effect once the moderators and their model-averaged publication-bias correction are accounted for. The corresponding average-study bias-corrected mean (reported in @tbl-table12) is 0.084, 95% CrI [0.000, 0.151] -- small in size, with the lower bound of the interval touching zero because the model-averaged posterior retains some mass on submodels in which the effect is fixed at zero, but with most of its posterior mass on positive values. This model conditions on a narrower moderator set than earlier fits of this same meta-regression (see the Decision point below); what that means for the comparison with FAT-PET is taken up in Section 10. The substantive interpretation of the moderators themselves happens in the panels that follow.
+
+Panel B reports the moderator inclusion probabilities. These are not directly comparable to the BMA posterior inclusion probabilities in @tbl-table6: BMA is estimated by OLS, which ignores both inverse-variance weighting and the within-study dependence structure that this protocol is built around. RoBMA's PIPs are estimated within a multilevel model that allows for hierarchical dependence within clusters, and that jointly corrects for publication bias rather than treating it as a separate linear term.
 
 Panel C reports the model-averaged regression coefficients: publication-bias-corrected estimates of each moderator's association with the true effect size, averaged across all candidate models and weighted by their posterior probability. One should examine the sign, magnitude, and credibility interval of each moderator, particularly those with high PIPs in Panel B, in the same way the CHE coefficients in @tbl-table6 are examined for statistical and substantive significance.
 
@@ -966,13 +993,17 @@ Panel D reports the residual heterogeneity (tau) and heterogeneity allocation (r
 
 Note that rho here means something different from the rho in Section 4. In multi-level RoBMA, rho indicates the proportion of heterogeneity allocated to the cluster-level component: rho = 0 means all heterogeneity is within clusters, rho = 1 means all heterogeneity is between clusters, and rho = 0.5 means equal split.
 
-**Decision point.** Two patterns are worth carrying forward into @tbl-table11. First, Endog_FE is corroborated across both methods: CHE finds it significant (coefficient −0.081, p = 0.014) and RoBMA assigns it a PIP of 0.864 with an almost identical coefficient (−0.085), so this negative association survives the shift from a single fixed specification to a model-averaged, jointly bias-corrected one. Second, NumberSCVars and LaggedDV diverge between the two methods: CHE does not find NumberSCVars significant (p = 0.132), yet RoBMA assigns it a PIP of 1.000 with a coefficient tightly bounded away from zero (−0.033, 95% CrI [−0.046, −0.021]), while LaggedDV is significant under CHE (p = 0.046) but only weakly supported by RoBMA (PIP = 0.308). Part of this divergence reflects a change in model space, not just method: @tbl-table9's BIC pre-selection dropped Endog_IV before it ever reached RoBMA, so the two tables are not testing an identical moderator set. When reading @tbl-table11, treat NumberSCVars and Endog_FE as RoBMA's best-supported moderators, and LaggedDV's contribution as resting more on matching @tbl-table7's scenario definition than on strong RoBMA evidence.
+**Decision point.** The moderator set entering this model is narrower than in earlier work on this dataset: @tbl-table9's BIC pre-selection currently retains only Endog_FE among the 18 candidate moderators. Reg_OECDEurope is carried into the model only because @tbl-table11's two best-practice scenarios require it, not because it clears the BIC screen.
+
+Endog_FE is corroborated across both methods. CHE finds it significant (coefficient −0.081, SE 0.028, p = 0.014; @tbl-table6), and RoBMA assigns it moderate-to-strong support (PIP = 0.828, inclusion Bayes factor = 4.816), with an estimated effect of comparable sign and magnitude: under the mean-difference contrast, the difference between the Endog_FE = 1 and Endog_FE = 0 levels is −0.078, close to the CHE coefficient. Reg_OECDEurope, consistent with its BIC performance, receives little support (PIP = 0.124, inclusion Bayes factor = 0.141) and should be read as a scenario-construction device for @tbl-table11 rather than as a substantive finding.
+
+This specification is deliberately narrow, and deliberately excludes two of the three moderators @tbl-table6 finds significant under CHE -- LaggedDV and Endog_IV -- because the current BIC screen does not retain them. Readers should treat the RoBMA moderator results in @tbl-table10 as conditional on this particular, BIC-motivated specification, not as the only reasonable one. Appendix C reports a robustness check that instead carries forward all three of CHE's significant moderators (Endog_FE, Endog_IV, LaggedDV) alongside Reg_OECDEurope. That alternative specification finds weak evidence against an overall Effect component (inclusion Bayes factor 0.441, versus 10.080 here) despite the fact that both Endog_FE and LaggedDV are individually corroborated (their posterior probabilities are 0.953 and 0.725, respectively; see Appendix C). Thus, whether RoBMA concludes there is an overall effect at all depends on which moderators are selected.
 
 ---
 
 ## Best-Practice Predictions
 
-@tbl-table11 is the RoBMA counterpart to @tbl-table7 and should be read alongside it. It asks the same question: what effect size would we expect from a methodologically rigorous study? But it answers that question using the publication-bias-corrected coefficients from @tbl-table10 rather than the FAT-PET-corrected coefficients from @tbl-table6. The best-practice covariate values match those used in @tbl-table7 for every moderator the two models share, so differences between the two sets of predictions are primarily attributable to the difference in the publication bias correction. They are not entirely so attributable, however: the RoBMA model conditions on the reduced moderator set from @tbl-table9's BIC pre-selection (eight moderators, rather than the nineteen regressors in @tbl-table7's model), so a portion of any difference may also reflect the difference in specification (see the Decision point following @tbl-table10).
+@tbl-table11 is the RoBMA counterpart to @tbl-table7 and should be read alongside it. It asks the same question: what effect size would we expect from a methodologically rigorous study? But it answers that question using the publication-bias-corrected coefficients from @tbl-table10 rather than the FAT-PET-corrected coefficients from @tbl-table6. The best-practice covariate values match those used in @tbl-table7 for the one moderator the two models now share, so differences between the two sets of predictions are only partly attributable to the difference in the publication bias correction. A substantial part is attributable to specification: the RoBMA model conditions on a much smaller moderator set than @tbl-table7's nineteen regressors -- just Endog_FE, the single moderator currently retained by @tbl-table9's BIC pre-selection, plus one regional dummy rather than all four (see the Best-practice scenarios subsection below) -- so the two predictions should be read as broadly comparable rather than strictly like-for-like (see the Decision point following @tbl-table10).
 
 ### Two types of intervals
 
@@ -980,7 +1011,9 @@ Note that rho here means something different from the rho in Section 4. In multi
 
 ### Best-practice scenarios
 
-The two scenarios follow @tbl-table7 exactly. Scenario BP#1 represents a non-OECD/Europe study using cognitive social capital, no lagged dependent variable, one social capital variable, and fixed effects for endogeneity, with no regional dummy active (implying the Reg_Other reference category). Scenario BP#2 is identical except that Reg_OECDEurope is set to one. @tbl-table11 presents these two scenarios as Panel A (non-OECD/Europe) and Panel B (OECD/Europe), matching @tbl-table7's panel structure; the complete list of covariate values each panel is evaluated at is reported in a note below each panel.
+The two scenarios follow @tbl-table7's covariate values exactly, though the moderator set now consists only of Endog_FE and Reg_OECDEurope. Scenario BP#1 represents a non-OECD/Europe study using fixed effects for endogeneity (Endog_FE = 1), with Reg_OECDEurope set to zero. Scenario BP#2 does the same for an OECD/Europe study. @tbl-table11 presents these two scenarios as Panel A (non-OECD/Europe) and Panel B (OECD/Europe), matching @tbl-table7's panel structure; the complete list of covariate values each panel is evaluated at is reported in a note below each panel. Because the current specification retains only Endog_FE and Reg_OECDEurope, out of Table 7's nineteen regressors, the two RoBMA scenarios are narrower than their Table 7 counterparts, not fully parallel to them.
+
+Another difference is that Reg_OECDEurope is the only regional dummy carried in this model, rather than all four used in @tbl-table7 (Reg_OECDEurope, Reg_US, Reg_Africa, and Reg_Asia). An earlier estimation that included all four encountered convergence problems, which can arise when a RoBMA model includes categorical moderators with sparse cells -- some regions here were represented by as few as four studies. Because neither best-practice scenario distinguishes among the non-OECD/Europe regions, the remaining three (Reg_US, Reg_Africa, and Reg_Asia) were folded into a single combined reference category alongside Reg_Other.
 
 ### Run the script
 
@@ -1018,19 +1051,19 @@ knitr::asis_output(paste0(
 ))
 ```
 
-**What to look for.** The width of the prediction intervals should be compared across @tbl-table7 and @tbl-table11: differences reflect differences in estimated residual heterogeneity between the two frameworks. Within @tbl-table11 itself, a very wide prediction interval relative to the credibility interval signals that substantial heterogeneity remains even after conditioning on all retained moderators, and the best-practice estimate should be interpreted as a central tendency rather than a precise forecast. The comparison of point estimates between @tbl-table7 and @tbl-table11 -- and what their convergence or divergence implies -- is taken up systematically in @tbl-table12 and the discussion in Section 10.
+**What to look for.** The width of the prediction intervals reflects estimated residual heterogeneity. A very wide prediction interval relative to the credibility interval signals that substantial heterogeneity remains even after conditioning on all retained moderators, and the best-practice estimate should be interpreted as a central tendency rather than a precise forecast. The comparison of point estimates between @tbl-table7 and @tbl-table11 -- and what their convergence or divergence implies -- is taken up systematically in @tbl-table12 and the discussion in Section 10.
 
 ---
 
 # Comparing the Two Approaches
 
-The two correction methods examined in this protocol -- FAT-PET, applied in Sections 6 through 8, and RoBMA, applied in Section 9 -- rest on different assumptions about the selection process, and those differences translate directly into different substantive conclusions. This section draws together the key results and explains why the two methods diverge, what that divergence means for interpretation, and how a reader should weigh the two sets of estimates.
+The two correction methods examined in this protocol -- FAT-PET, applied in Sections 6 through 8, and RoBMA, applied in Section 9 -- rest on different assumptions about the selection process. This section draws together the key results and explains how a reader should weigh the two sets of estimates.
 
 ## The core comparison
 
-@tbl-table12 anchors the comparison. Its rows are not a sampling of the document's many estimates but precisely the ones the protocol's sequential decision points carried forward: the raw mean comes from the CHE model because Section 5 selected CHE over the alternative estimators; the FAT-PET row is the Panel B PET intercept because Section 6's decision rule preferred Panel B over Panel A and retained PET over PEESE (which was never triggered); the RoBMA rows are their model-averaged counterparts; and the best-practice rows are the fully corrected, bottom-line estimates from each framework. Estimates that served as diagnostics or robustness checks along the way (Panel A's intercept, the PEESE sensitivity results, CHE-ISCW, and the PML selection models) are deliberately not carried into this final comparison. The raw, uncorrected CHE mean effect (@tbl-table4) -- averaged over all 957 estimates and 83 studies, before any adjustment for publication bias -- is reduced by roughly 76 percent under the FAT-PET correction (@tbl-table5, embedded in the CHE meta-regression), to a mean effect indistinguishable from zero, and by roughly 30 percent under the RoBMA correction (@tbl-table8, using a model-averaged selection mechanism), to a level that still reflects a meaningful positive effect.
+Starting at the top of @tbl-table12, we see that the uncorrected CHE mean effect of 0.175 (95% CI [0.139, 0.212]) is reduced by roughly 76 percent under the FAT-PET correction to a mean effect indistinguishable from zero (0.042, 95% CI [-0.025, 0.108]), and by roughly 52 percent under the RoBMA correction to a mean effect of 0.084 (95% CrI [0.000, 0.151]). At the unconditional level the two methods therefore reach substantively the same conclusion: both point estimates are small, the gap between them (0.042 in Fisher's z) falls comfortably below the Doucouliagos (2011) benchmark for a small effect, and each method's estimate sits well inside the other's interval.
 
-The same pattern persists at the level of best-practice predictions, also reported in @tbl-table12. Under the FAT-PET correction (@tbl-table7), the predicted effect for a best-practice study is close to zero, consistent with the near-zero PET intercept. Under the RoBMA correction (@tbl-table11), the best-practice predicted effect remains meaningfully positive for both scenarios considered. The prediction intervals reported in @tbl-table11 itself (a different quantity from the confidence intervals @tbl-table12 shows, for comparability across rows -- see the note below @tbl-table12) are wide and include zero, reflecting substantial residual heterogeneity, but the central estimates remain positive in a way the FAT-PET predictions are not.
+The one technical distinction is that RoBMA's inclusion Bayes factor for the Effect component (10.080) registers as moderate evidence for a nonzero effect, whereas FAT-PET's confidence interval does not exclude zero -- a difference in how close each framework's threshold sits to this particular estimate, not a disagreement about its size.
 
 ### Run the script
 
@@ -1063,25 +1096,21 @@ knitr::asis_output(paste0(
 ))
 ```
 
+A somewhat larger gap emerges at the level of best-practice predictions. Under the FAT-PET correction, the predicted effect for a best-practice study is small and slightly negative for both scenarios (-0.022 for non-OECD/Europe, -0.043 for OECD/Europe). Under the RoBMA correction, the best-practice predicted effect is small and positive for both scenarios (0.047 and 0.042 respectively). This amounts to a gap of roughly 0.07 (non-OECD/Europe) and 0.09 (OECD/Europe) in Fisher's z, at or modestly above the Doucouliagos (2011) small-effect benchmark.
+
+Every one of these four point estimates has a confidence or credible interval that includes zero, so neither method finds a best-practice effect that is statistically distinguishable from zero, even though the RoBMA figures sit consistently above the FAT-PET ones. Part of this gap may reflect genuine differences between the two corrections at a specific covariate profile, and part may reflect the fact that the RoBMA meta-regression conditions on a much smaller and different moderator set than the FAT-PET regressions. Appendix C tests this directly, refitting the RoBMA meta-regression with an alternative, CHE-motivated moderator set. The resulting best-practice predictions sit much closer to zero (0.013 and 0.003, versus 0.047 and 0.042 here), and the model finds weak evidence against an overall effect (inclusion Bayes factor 0.441, versus 10.080 here), confirming that both the point estimates and the Effect verdict itself are sensitive to which moderators are selected.
+
 ## Why the two methods diverge
 
-The divergence is not a contradiction -- it is a direct consequence of the different models of the selection process that each method embeds. As explained at the start of Section 9, FAT-PET assumes the probability of publication is a monotone function of the standard error, and its correction is well-calibrated when that assumption holds; when selection instead operates on the sign of the effect or at discrete significance thresholds, the linear correction can overshoot, driving estimates too far toward zero.
-
-RoBMA diagnoses exactly this situation in the present dataset. The z-plot in @fig-figure3 shows two distinct spikes in the empirical distribution of z-statistics -- one at z = 0 and one at z ≈ 1.96 -- consistent with selection on both sign and significance, a pattern a linear standard-error correction cannot represent. RoBMA, which averages over step-function models capable of capturing threshold effects alongside regression-based models analogous to PET and PEESE, assigns substantial posterior weight to the step-function component and applies a correspondingly less aggressive downward correction. This diagnosis does not rest on RoBMA alone: the PML step-function models in Section 6's robustness checks, an entirely separate frequentist method, found the same sign-based asymmetry ($\hat{\lambda}_2 = 0.27$, with a bootstrap confidence interval excluding 1), so two independent approaches agree that the selection process has precisely the feature that leads FAT-PET to over-correct. The disagreement between the two methods is therefore not about whether publication bias is present -- the inclusion Bayes factors in @tbl-table8 put that beyond dispute -- but about its functional form, which is what determines how large the correction should be.
-
-## What to look for when comparing results
-
-When reading @tbl-table12 (fuller detail is available in @tbl-table7 and @tbl-table11), three things are worth focusing on. First is the size of the gap between the FAT-PET and RoBMA best-practice estimates: it exceeds the Doucouliagos (2011) benchmark for a small effect, so the two methods are not simply reporting noisy versions of the same number -- the choice of correction method changes the substantive conclusion.
-
-Second is the width of the confidence and credible intervals in @tbl-table12 relative to that gap. Every one of the four best-practice intervals -- FAT-PET's and RoBMA's, for both scenarios -- includes zero, and each is wider than the roughly 0.10-0.12 gap between the two methods' point estimates: FAT-PET's confidence intervals span roughly 0.32-0.39, RoBMA's credible intervals roughly 0.18-0.20. The choice of correction method matters for the central estimate, but neither method can rule out a zero best-practice effect on its own, and both leave substantial uncertainty about the mean even after conditioning on best-practice covariate values.
-
-Third is whether the gap changes once moderators are introduced. @tbl-table12 reports both the unconditional (intercept-only) comparison and the best-practice comparison side by side. If the gap narrows between these two rows, part of the unconditional divergence was driven by study characteristics correlated with the selection process; if it stays roughly the same, the divergence is attributable to the correction mechanism itself rather than to compositional differences in the studies being compared.
+FAT-PET and RoBMA embed different models of the selection process, and that structural difference is real regardless of what any one dataset happens to show. As explained at the start of Section 9, FAT-PET assumes the probability of publication is a monotone function of the standard error; when selection instead operates on the sign of the effect or at discrete significance thresholds, the linear correction can in principle overshoot, driving estimates too far toward zero. The z-plot in @fig-figure3 shows two distinct spikes in the empirical distribution of z-statistics -- one at z = 0 and one at z ≈ 1.96 -- consistent with selection on both sign and significance, a pattern a linear standard-error correction cannot represent. This diagnosis does not rest on RoBMA alone: the PML step-function models in Section 6's robustness checks, an entirely separate frequentist method, found the same sign-based asymmetry ($\hat{\lambda}_2 = 0.27$, with a bootstrap confidence interval excluding 1), so two independent approaches agree the selection process has a feature FAT-PET's smooth, standard-error-only correction cannot represent.
 
 ## Overall conclusion
 
-Two conclusions follow, and both are robust regardless of which correction method is preferred. Publication bias in this literature is severe: every method examined here agrees the raw CHE mean substantially overstates the true effect, and the evidence for selective reporting is essentially conclusive. How much that raw mean should be discounted, however, depends on the assumed selection mechanism, and the two methods do not agree: FAT-PET's linear correction is aggressive enough to bring the best-practice effect indistinguishable from zero, while RoBMA's model-averaged correction leaves a modest but genuine positive effect.
+Two conclusions follow, and both are robust regardless of which correction method is preferred. First, publication bias in this literature is severe, and every method examined here agrees on that point (inclusion Bayes factors for the Publication Bias component exceed 59,999 in every RoBMA specification fitted). Second, at the unconditional level FAT-PET and RoBMA correct the raw CHE mean to substantively the same place: both figures are small, and neither method's interval excludes zero.
 
-The honest summary for a reader is therefore a range rather than a point estimate: the corrected best-practice effect lies somewhere between roughly zero and 0.08 in partial correlation units. Neither endpoint should be treated as definitive, since each rests on selection-process assumptions that the data cannot fully adjudicate -- but the range itself is informative. It says that the unadjusted literature substantially overstates the effect of social capital on economic growth, and that even the more generous of the two corrections still leaves only a modest positive relationship once study quality is accounted for, and even that estimate has a credible interval that includes zero.
+The two methods part ways only at the best-practice level, where FAT-PET's corrected estimates are small and negative and RoBMA's are small and positive. This sign difference does not extend to the more basic conclusion -- the effect is small and statistically indistinguishable from zero either way -- and it is not even a fixed property of the two frameworks: Appendix C shows that RoBMA's own verdict changes with which moderators enter the meta-regression, so part of the apparent FAT-PET/RoBMA disagreement reflects specification uncertainty within RoBMA itself.
+
+The honest summary for a reader is that the unadjusted literature substantially overstates the effect of social capital on economic growth, that publication bias is severe under any correction method considered here, and that, once corrected, the effect is small under every specification examined -- FAT-PET's, RoBMA's primary specification, and RoBMA's alternative specification in Appendix C alike. The honest range runs from indistinguishable-from-zero to modestly positive, and no single point estimate in this protocol should be read as the definitive answer.
 
 # References
 
@@ -1101,7 +1130,11 @@ Doucouliagos, H. 2011. "How Large Is Large? Preliminary and Relative Guidelines 
 
 Egger, M., G. D. Smith, M. Schneider, and C. Minder. 1997. "Bias in Meta-Analysis Detected by a Simple, Graphical Test." *British Medical Journal* 315: 629--634.
 
+Furuya-Kanamori, L., C. Xu, L. Lin, T. Doan, H. Chu, L. Thalib, and S. A. R. Doi. 2020. "P Value-Driven Methods Were Underpowered to Detect Publication Bias: Analysis of Cochrane Review Meta-Analyses." *Journal of Clinical Epidemiology* 118: 86--92.
+
 Gelman, A., and E. Loken. 2014. "The Statistical Crisis in Science: Data-Dependent Analysis --- A 'Garden of Forking Paths' --- Explains Why Many Statistically Significant Comparisons Don't Hold Up." *American Scientist* 102(6): 460--465.
+
+Macaskill, P., S. D. Walter, and L. Irwig. 2001. "A Comparison of Methods to Detect Publication Bias in Meta-Analysis." *Statistics in Medicine* 20(4): 641--654.
 
 Maier, M., F. Bartoš, and E.-J. Wagenmakers. 2023. "Robust Bayesian Meta-Analysis: Addressing Publication Bias with Model-Averaging." *Psychological Methods* 28: 107--122.
 
@@ -1131,7 +1164,42 @@ Xue, X., W. R. Reed, and R. C. M. van Aert. 2025. "Social Capital and Economic G
 
 ---
 
-# Appendix: Outlier and Influence Analysis
+# Appendix A: Sensitivity to the Choice of Rho
+
+Because $\rho$ is assumed rather than estimated (Section 4), it is good practice to verify that the conclusions of the analysis do not depend on the particular value chosen. The logic is the same as for any robustness check around an unidentified assumption: re-estimate the key quantities across the full range of values the assumption could plausibly take, and ask whether the conclusions that matter remain stable. If they do, the assumption is not driving the results and the main-text value can be reported with confidence. If they do not, the dependence must be disclosed and the range of possible conclusions reported alongside the point estimate.
+
+The check re-fits the intercept-only CHE model across a grid of $\rho$ from 0 to 0.95, holding everything else fixed, and records the mean effect (the CHE intercept), its cluster-robust standard error, and the two variance components. A value of $\rho = 0$ corresponds to the hierarchical-effects model, in which a study's estimates share only a common study-level random effect and their sampling errors are treated as uncorrelated; values approaching 1 assume that a study's estimates share almost all of their sampling error. The grid is deliberately wider than the values most applications would consider plausible, so that the display is conservative.
+
+## Run the script
+
+```{r}
+#| label: rho-sensitivity-run
+
+# Note: this script takes approximately 6 minutes to run.
+source("Protocol_RhoSensitivity.R")
+```
+
+## Display the output
+
+```{r}
+#| label: rho-sensitivity-figures
+#| eval: true
+
+library(knitr)
+
+include_graphics("Figure_RhoIntercept.png")
+include_graphics("Figure_RhoVarianceComponents.png")
+```
+
+**What to look for.** In the running example, the mean effect is stable across this range. The CHE intercept declines gradually and monotonically from 0.194 at $\rho = 0$ to 0.161 at $\rho = 0.95$, a movement that is small relative to the standard error of the estimate, which itself stays close to 0.018 to 0.019 throughout. Every value in this range is well away from zero and of similar magnitude, so no conclusion about the sign, significance, or approximate size of the mean effect turns on the choice of $\rho$. The variance components shift more visibly, and in opposite directions: between-study heterogeneity ($\hat{\tau}$) falls from 0.154 to 0.109 while within-study heterogeneity ($\hat{\omega}$) rises from 0.147 to 0.174. This reallocation is mechanical: as $\rho$ increases, more of the observed similarity among a study's estimates is attributed to correlated sampling error and correspondingly less to a shared study-level true effect. Both components remain substantively important at every value of $\rho$, so the qualitative picture is also unchanged.
+
+The stability of the standard error is not incidental. The cluster-robust (CR2) standard errors used throughout this protocol are designed to remain valid even when the working model for the dependence structure is misspecified (Pustejovsky and Tipton, 2022), and choosing the wrong $\rho$ is one such misspecification. The robust standard errors thus provide a first line of protection against a poorly chosen $\rho$, and the sensitivity analysis confirms that the point estimate is stable as well. Together they make the analysis robust to the fact that $\rho$ cannot be identified from the data.
+
+For write-up purposes, it is usually enough to report the value of $\rho$ used, state that a sensitivity analysis was conducted over the full plausible range, and summarize the result in a sentence or two. The full numeric grid remains available in `Table_RhoSensitivity.xlsx`. Where a check of this kind reveals that a conclusion flips within the plausible range of $\rho$, that finding should be reported prominently rather than buried: it means the analysis is genuinely sensitive to an unidentified assumption, and readers need to know the range of estimates the data are consistent with.
+
+---
+
+# Appendix B: Outlier and Influence Analysis
 
 Any meta-analysis that includes a large number of effect sizes may be sensitive to a small number of highly influential observations or studies. This appendix presents two complementary analyses: observation-level influence diagnostics and a study-level jackknife.
 
@@ -1148,7 +1216,7 @@ This analysis is computationally expensive: fitting 83 CHE models in sequence ta
 ## Run the script
 
 ```{r}
-#| label: appendixC-run
+#| label: appendixB-run
 
 # Note: this script takes approximately 2 hours to run (83 CHE model fits).
 # Recommended to run overnight or in a background session.
@@ -1158,7 +1226,7 @@ source("Protocol_Outliers.R")
 ## Display the output
 
 ```{r}
-#| label: appendixC-figures
+#| label: appendixB-figures
 #| eval: true
 
 include_graphics("Figure_Influence_RE.png")
@@ -1166,7 +1234,7 @@ include_graphics("Figure_Jackknife_CHE.png")
 ```
 
 ```{r}
-#| label: appendixC-table
+#| label: appendixB-table
 #| eval: true
 
 read_excel("Table_Jackknife_CHE.xlsx") |> knitr::kable(caption = "Study-level jackknife results")
@@ -1177,4 +1245,114 @@ read_excel("Table_Jackknife_CHE.xlsx") |> knitr::kable(caption = "Study-level ja
 **Decision point.** In this dataset, the diagnostics point to a small number of specific studies rather than a diffuse problem. One observation from Pan and He is the clear standout across every influence statistic at once (studentized residual ≈ 8.7, Cook's distance ≈ 0.35, both far above anything else in the sample): it is one of sixteen effect sizes this study reports, several of which are exact or near-exact duplicates of one another, and its own value (partial correlation ≈ 0.45) is well above the rest of the study's range (roughly 0.13 to 0.37). Two single-observation studies are also flagged: Kaldaru and Parts (partial correlation 0.92) and Holthe (two observations, one at 0.96), both reporting far larger effects than is typical elsewhere in the literature. The jackknife results confirm the same picture from a different angle: dropping Kaldaru and Parts changes the CHE intercept the most (-0.0098), followed by Holthe (-0.0090) and Algan and Cahuc, a 33-observation study whose own average effect is unusually high (-0.0082). Lyon, the single largest study in the sample at 68 observations, is also flagged, but for the opposite reason: dropping it increases the intercept (+0.0062), meaning its many observations pull the pooled mean down rather than up.
 
 Even so, the overall picture is reassuring. Across all 83 studies, the leave-one-out intercept never moves outside roughly 0.165 to 0.181, a narrow band around the full-sample estimate of 0.175, and no single study is capable of overturning the qualitative conclusion that the raw, uncorrected literature reports a positive average association. The practical recommendation is to verify that Kaldaru and Parts, Holthe, and Pan and He are coded correctly, since partial correlations above roughly 0.9 are rare enough in this literature to warrant a second look at the original source -- but not to exclude them without that check, since the jackknife shows the overall conclusion does not depend on any one of them.
+
+---
+
+# Appendix C: RoBMA Meta-Regression with an Alternative Moderator Set (Robustness Check)
+
+Section 9.6's Decision point flags that the RoBMA meta-regression in @tbl-table10 conditions on a narrow moderator set (Endog_FE and Reg_OECDEurope) chosen by an automated BIC pre-selection step. That set excludes two of the three moderators the CHE meta-regression finds significant (@tbl-table6): LaggedDV and Endog_IV. This appendix reports a robustness check that instead retains all three of CHE's significant moderators -- Endog_FE, Endog_IV, and LaggedDV -- alongside Reg_OECDEurope, again included only because the best-practice scenarios below require it. The question this check answers is narrow but consequential: does RoBMA's headline verdict about whether an overall effect exists depend on which moderators happen to survive the BIC screen?
+
+This is a robustness check, not a replacement for the protocol's primary RoBMA specification. Its results are summarized in Section 9.6's Decision point and in Section 10; this appendix provides the full detail behind those summaries.
+
+## Model specification
+
+The model is fit the same way as the primary specification in @tbl-table10: measure = "ZCOR", clustered on `newid`, binary moderators declared as factors (so RoBMA applies the categorical-moderator prior rather than treating a 0/1 indicator as continuous), and RoBMA's default mean-difference (meandif) contrasts, so the intercept remains the grand-mean, average-study effect.
+
+A first attempt at this fit, using the same MCMC settings as @tbl-table10, failed to converge: the intercept (R-hat 1.051, ESS 238) and LaggedDV (R-hat 1.080, ESS 90) both fell short of the protocol's convergence bar (R-hat < 1.05, ESS ≥ 500; see Section 9.3), with Reg_OECDEurope's ESS (339) also falling short. Because the intercept is the parameter the Effect-component Bayes factor is computed from, this meant the headline finding from that first attempt could not be trusted. The sampling budget was doubled (`sample` 20000 → 40000, `burnin` 10000 → 20000, `adapt` 10000 → 20000) and the model refit from scratch. The results reported below are from that second, doubled-budget fit.
+
+## Run the script
+
+```{r}
+#| label: appendixC-run
+
+# Note: the doubled-budget fit takes approximately 6 hours.
+# Protocol_Table10_FYI.R fits the meta-regression; Protocol_Table11_FYI.R
+# derives the best-practice predictions from the saved model object.
+source("Protocol_Table10_FYI.R")
+source("Protocol_Table11_FYI.R")
+```
+
+## Display the output
+
+```{r}
+#| label: appendixC-table10fyi
+#| eval: true
+
+read_excel("Table10_FYI_RoBMA.xlsx", sheet = "ComponentInclusion") |>
+  dplyr::mutate(dplyr::across(-1, \(x) suppressWarnings(as.numeric(x)))) |>
+  knitr::kable(caption = "Panel A: Component inclusion Bayes factors (alternative moderator set)", digits = 3)
+read_excel("Table10_FYI_RoBMA.xlsx", sheet = "ModeratorInclusion") |>
+  dplyr::mutate(dplyr::across(-1, \(x) suppressWarnings(as.numeric(x)))) |>
+  knitr::kable(caption = "Panel B: Moderator inclusion probabilities and Bayes factors (alternative moderator set)", digits = 3)
+read_excel("Table10_FYI_RoBMA.xlsx", sheet = "Coefficients") |>
+  dplyr::mutate(dplyr::across(-1, \(x) suppressWarnings(as.numeric(x)))) |>
+  knitr::kable(caption = "Panel C: Model-averaged regression coefficients (alternative moderator set)", digits = 3)
+read_excel("Table10_FYI_RoBMA.xlsx", sheet = "CommonEstimates") |>
+  dplyr::mutate(dplyr::across(-1, \(x) suppressWarnings(as.numeric(x)))) |>
+  knitr::kable(caption = "Panel D: Heterogeneity and heterogeneity-allocation estimates (alternative moderator set)", digits = 3)
+```
+
+**Convergence diagnostics.** As in @tbl-table10, R-hat and effective sample size (ESS) for every parameter are reported directly, obtained from `summary(fit, diagnostics = TRUE)` on the doubled-budget fit.
+
+```{r}
+#| label: appendixC-diagnostics
+#| eval: true
+
+diagC_tbl <- data.frame(
+  Parameter = c("intercept", "tau", "rho", "Endog_FE", "Endog_IV", "LaggedDV", "Reg_OECDEurope"),
+  `R-hat`   = c(1.004, 1.000, 1.000, 1.001, 1.007, 1.002, 1.024),
+  ESS       = c(624, 17940, 17577, 2742, 1452, 492, 931),
+  check.names = FALSE
+)
+
+diagC_tbl |> knitr::kable(caption = "MCMC convergence diagnostics for the Appendix C meta-regression", digits = 3)
+```
+
+```{r}
+#| label: appendixC-diagnostics-note
+#| eval: true
+
+knitr::asis_output(paste0(
+  '<div style="margin-top: 0.25em; text-align: left;"><p><em>Note: Diagnostics obtained from ',
+  '<code>summary(fit, diagnostics = TRUE)</code>, run on the saved <code>RoBMA_metaregression_FYI.rds</code> ',
+  'object, after the sampling budget was doubled following a first attempt that failed to converge ',
+  '(see Model specification above). Every parameter now clears the R-hat &lt; 1.05 bar. LaggedDV\'s ',
+  'ESS (492) falls just short of the protocol\'s ESS ≥ 500 bar, a marginal shortfall rather than the ',
+  'severe failure seen in the first attempt (ESS 90); it is reported here rather than concealed, ',
+  'consistent with the convergence-reporting standard described in Section 9.3.</em></p></div>\n\n'
+))
+```
+
+```{r}
+#| label: appendixC-table11fyi
+#| eval: true
+
+notesC <- read_excel("Table11_FYI_BestPractice.xlsx", sheet = "Notes")
+
+# Panel A: BP#1 (non-OECD/Europe)
+read_excel("Table11_FYI_BestPractice.xlsx", sheet = "BP1 - Non-OECD Europe") |>
+  knitr::kable(align = "lrrr", caption = "Panel A: Non-OECD/Europe (alternative moderator set)")
+
+knitr::asis_output(paste0(
+  '<div style="margin-top: 0.25em; margin-bottom: 2em; text-align: left;"><p><em>Note: ',
+  notesC$Note[1], '</em></p></div>\n\n'
+))
+
+# Panel B: BP#2 (OECD/Europe)
+read_excel("Table11_FYI_BestPractice.xlsx", sheet = "BP2 - OECD Europe") |>
+  knitr::kable(align = "lrrr", caption = "Panel B: OECD/Europe (alternative moderator set)")
+
+knitr::asis_output(paste0(
+  '<div style="margin-top: 0.25em; text-align: left;"><p><em>Note: ',
+  notesC$Note[2], '</em></p></div>\n\n'
+))
+```
+
+**What to look for.** Panel A shows weak evidence against an overall Effect component under this specification (inclusion Bayes factor 0.441, posterior probability 0.306), in contrast to the primary specification's moderate evidence for one (inclusion Bayes factor 10.080; @tbl-table10). Heterogeneity and Publication Bias remain decisive either way (inclusion Bayes factors exceeding 59,999 in both specifications). The corresponding average-study bias-corrected mean is 0.023, 95% CrI [0.000, 0.125], noticeably smaller than the primary specification's 0.084 [0.000, 0.151].
+
+Panel B shows a mixed picture across the four moderators. Endog_FE is strongly supported (PIP = 0.953, inclusion Bayes factor = 20.157) and LaggedDV moderately so (PIP = 0.725, inclusion Bayes factor = 2.637); both corroborate the direction of the corresponding CHE coefficients in @tbl-table6 (Endog_FE: −0.081, p = 0.014; LaggedDV: −0.058, p = 0.046), with somewhat larger estimated magnitudes under the mean-difference contrast (−0.105 and −0.089, respectively). Endog_IV, by contrast, receives only weak support (PIP = 0.231, inclusion Bayes factor = 0.300) despite being significant under CHE (−0.039, p = 0.045) -- the one CHE-significant moderator that RoBMA does not corroborate in this specification. Reg_OECDEurope remains weakly supported (PIP = 0.184), consistent with its role here as a scenario-construction device rather than a substantive finding, matching its status in the primary specification.
+
+The best-practice predictions in Panels A and B of the table above sit close to zero (0.013 and 0.003 respectively, in Fisher's z), each with a credibility interval and prediction interval that comfortably includes zero, and each noticeably smaller than the primary specification's corresponding predictions (0.047 and 0.042; @tbl-table11). This mirrors the gap already seen at the average-study level, and is consistent with the weaker Effect-component evidence found under this specification.
+
+**Decision point.** Taken together, this robustness check confirms that RoBMA's conclusion about whether an overall effect exists is sensitive to which moderators are selected: a BIC-motivated, two-moderator specification finds moderate evidence for an effect, while a CHE-motivated, four-moderator specification finds only weak evidence against one, even though the moderators the two specifications share (Endog_FE) or partially share (LaggedDV, present here but not in the primary specification) point in the same substantive direction. Neither specification should be reported as the single correct answer; both are reported here so the reader can see the range of conclusions the data support under different, defensible choices of which moderators to include. The one convergence caveat -- LaggedDV's ESS falling 8 short of the 500 bar -- is minor relative to the dramatic improvement over the first attempt, but is disclosed rather than smoothed over, consistent with this protocol's general practice of reporting convergence diagnostics honestly rather than only when they pass cleanly.
 

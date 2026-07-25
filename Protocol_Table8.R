@@ -1,13 +1,12 @@
+library(here)   # resolves file paths relative to the project root (.Rproj)
 library(haven)
 library(RoBMA)
 library(readxl)
 
-setwd("C:/PROTOCOL OF MAs WITH DEPENDENT DATA")
-
 # ---- LOAD FITTED RoBMA MODEL FROM PROTOCOL_FIGURE3.R ----
 # Avoids refitting the model (~5 hours). Must run Protocol_Figure3.R first.
 cat("Loading intercept-only RoBMA model...\n")
-fit <- readRDS("RoBMA_intercept_only.rds")
+fit <- readRDS(here("RoBMA_intercept_only.rds"))
 
 # ---- EXTRACT RoBMA BIAS-CORRECTED MEAN ----
 # summary() returns model-averaged posterior estimates.
@@ -28,7 +27,7 @@ cat(sprintf("RoBMA bias-corrected mean (Fisher's z): %.3f [%.3f, %.3f]\n",
 # ---- READ CHE MEAN FROM TABLE 4 ----
 # Table 4 has five estimators; we use CHE (the last column).
 # Row 1 is the header, Row 2 is the Constant (intercept).
-t4 <- read_excel("Table4_Protocol.xlsx", col_names = TRUE)
+t4 <- read_excel(here("Table4_Protocol.xlsx"), col_names = TRUE)
 
 # The CHE column is the 6th column; the intercept is in the second data row.
 # We strip significance stars and convert to numeric.
@@ -49,7 +48,7 @@ cat(sprintf("CHE uncorrected mean (Fisher's z): %.3f (SE = %.3f)\n",
 # (the CHE PET intercept in Panel B, not Panel A -- see the "PET vs PEESE"
 # discussion in the protocol). This was previously a bug: the comparison
 # table below was built from Panel A's 0.028 instead of Panel B's 0.042.
-t5 <- read_excel("Table5_Protocol.xlsx", sheet = "Panel B - Full controls", col_names = TRUE)
+t5 <- read_excel(here("Table5_Protocol.xlsx"), sheet = "Panel B - Full controls", col_names = TRUE)
 
 fatpet_mean_raw <- t5[[6]][1]                       # "0.042"
 fatpet_mean     <- as.numeric(gsub("[^0-9.-]", "", fatpet_mean_raw))
@@ -79,8 +78,10 @@ cat("\n=== Comparison Table (Fisher's z scale) ===\n")
 print(comparison, row.names = FALSE)
 
 # ---- DECISION RULE ----
-# If the FAT-PET and RoBMA corrected means tell the same substantive story,
-# stop here. If they diverge, proceed to Tables 9-11 (Protocol_Table9.R onward).
+# Report this comparison as a robustness check, then proceed to Tables 9-11
+# (Protocol_Table9.R onward) regardless of whether the FAT-PET and RoBMA
+# corrected means agree: agreement at the pooled level does not imply that the
+# corresponding meta-regression results will also agree.
 cat("\n--- Decision Rule ---\n")
 cat(sprintf("CHE uncorrected mean:    %.3f\n", che_mean))
 cat(sprintf("FAT-PET corrected mean:  %.3f\n", fatpet_mean))
@@ -88,8 +89,8 @@ cat(sprintf("RoBMA corrected mean:    %.3f\n", robma_mean))
 
 divergence <- abs(fatpet_mean - robma_mean)
 cat(sprintf("Divergence (FAT-PET vs RoBMA): %.3f\n", divergence))
-cat("If FAT-PET and RoBMA corrected estimates diverge substantively,\n")
-cat("proceed to Protocol_Table9.R (BIC-based moderator selection).\n")
+cat("Proceed to Protocol_Table9.R (BIC-based moderator selection) regardless:\n")
+cat("pooled agreement does not imply the meta-regression results will agree.\n")
 
 # ---- EXTRACT BAYES FACTORS FROM RoBMA ----
 # summary()$inclusion_components reports evidence for each model component:
@@ -137,7 +138,7 @@ writeData(wb, "Comparison", comparison)
 addWorksheet(wb, "BayesFactors")
 writeData(wb, "BayesFactors", bf_table)
 
-saveWorkbook(wb, "Table8_RoBMA_Comparison.xlsx", overwrite = TRUE)
+saveWorkbook(wb, here("Table8_RoBMA_Comparison.xlsx"), overwrite = TRUE)
 cat("Table saved to Table8_RoBMA_Comparison.xlsx (two sheets)\n")
 
 cat("\nProtocol_Table8.R complete.\n")

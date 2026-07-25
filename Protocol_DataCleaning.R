@@ -1,5 +1,3 @@
-setwd("C:/PROTOCOL OF MAs WITH DEPENDENT DATA")
-
 # Record start time -- printed at the end so run time can be documented.
 start_time <- proc.time()
 
@@ -7,11 +5,12 @@ start_time <- proc.time()
 # Install and load required packages
 # ============================================================
 
-packages <- c("haven", "tidyverse", "writexl")
+packages <- c("here", "haven", "tidyverse", "writexl")
 
 installed <- packages %in% installed.packages()[, "Package"]
 if (any(!installed)) install.packages(packages[!installed])
 
+library(here)        # resolves file paths relative to the project root (.Rproj)
 library(haven)      # read/write Stata .dta files
 library(tidyverse)  # data manipulation
 library(writexl)    # export to Excel
@@ -20,7 +19,7 @@ library(writexl)    # export to Excel
 # Load data
 # ============================================================
 
-DT <- as.data.frame(read_dta("SCData (20240508).dta"))
+DT <- as.data.frame(read_dta(here("SCData (20240508).dta")))
 
 cat("==========================================================\n")
 cat("DATA CLEANING REPORT\n")
@@ -549,7 +548,7 @@ write_xlsx(
     "True duplicates"  = true_dup_detail,
     "Coding conflicts" = conflict_detail
   ),
-  "DataCleaning_Report.xlsx"
+  here("DataCleaning_Report.xlsx")
 )
 
 # --- Save full dataset with flags as a new .dta file ---
@@ -558,7 +557,7 @@ write_xlsx(
 # by any subsequent analysis scripts -- those scripts load
 # SCData_processed.rds instead.
 
-write_dta(DT, "SCData_flagged.dta")
+write_dta(DT, here("SCData_flagged.dta"))
 
 # --- Save processed dataset ---
 # For this protocol, the processed dataset is identical to the raw data:
@@ -567,7 +566,7 @@ write_dta(DT, "SCData_flagged.dta")
 # DataCleaning_Report.xlsx, decide which flagged observations to drop or
 # revise, make those changes to DT, and then save the result here.
 # Keep a log file documenting every change made and the reason for it.
-saveRDS(DT, "SCData_processed.rds")
+saveRDS(DT, here("SCData_processed.rds"))
 
 cat("==========================================================\n")
 cat("Output saved:\n")
@@ -581,4 +580,4 @@ cat("==========================================================\n")
 # ── Run time ──────────────────────────────────────────────────────────────────
 elapsed <- proc.time() - start_time
 cat(sprintf("\nTotal run time: %.1f seconds (%.1f minutes).\n",
-            elapsed["elapsed"], elapsed["el
+            elapsed["elapsed"], elapsed["elapsed"] / 60))

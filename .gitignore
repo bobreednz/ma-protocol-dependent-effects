@@ -2,7 +2,6 @@
 .RData
 .Rhistory
 .Rproj.user/
-*.Rproj
 
 # Quarto build artifacts
 /.quarto/

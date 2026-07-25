@@ -1,49 +1,47 @@
+library(here)   # resolves file paths relative to the project root (.Rproj)
 library(RoBMA)
 library(writexl)
-
-setwd("C:/PROTOCOL OF MAs WITH DEPENDENT DATA")
 
 start_time <- proc.time()
 
 # ---- LOAD MODEL ----
 # The fitted multilevel RoBMA meta-regression from Protocol_Table10.R. No refitting needed.
 cat("Loading Protocol_Table10.R model...\n")
-fit <- readRDS("RoBMA_metaregression.rds")
+fit <- readRDS(here("RoBMA_metaregression.rds"))
 cat("Model loaded.\n\n")
 
 # ---- BEST-PRACTICE COVARIATE VALUES ----
 # Following Part 1 (Table 7) and Xue, Reed, and van Aert (2025), the
-# best-practice study uses cognitive social capital, no lagged DV, one social
-# capital variable, and fixed effects for endogeneity. sez and PubYear are not
-# in the model (RoBMA corrects for publication bias internally; PubYear was not
-# retained by Table 9's BIC pre-selection).
+# best-practice study uses fixed effects for endogeneity. sez and PubYear are
+# not in the model (RoBMA corrects for publication bias internally; PubYear
+# was not retained by Table 9's BIC pre-selection).
 #
-# The two scenarios differ only in region:
-#   BP#1: Non-OECD/Europe (all four region dummies = 0, implying Reg_Other)
-#   BP#2: OECD/Europe     (Reg_OECDEurope = 1, all other region dummies = 0)
+# As of the 2026-07-24 respecification (see Protocol_Table10.R and
+# CLAUDE.md), Table 10 carries only two moderators: Endog_FE and one region
+# dummy, Reg_OECDEurope. SC1_Cognitive, LaggedDV, and NumberSCVars were
+# dropped -- a 2026-07-23 re-run of Table 9's BIC pre-selection, independently
+# reproduced 2026-07-24, no longer retains them (the four-moderator set used
+# in an earlier version of this script came from a stale, pre-2026-07-15
+# Table 9 run; see CLAUDE.md). Reg_US, Reg_Africa, and Reg_Asia remain folded
+# into the reference category, for the reasons given in Protocol_Table10.R:
+# neither best-practice scenario below distinguishes among them, and
+# estimating them separately caused severe MCMC non-convergence.
+#   BP#1: Non-OECD/Europe (Reg_OECDEurope = 0, implying the combined reference
+#         category of Reg_US, Reg_Africa, Reg_Asia, and Reg_Other)
+#   BP#2: OECD/Europe     (Reg_OECDEurope = 1)
 #
-# NumberSCVars is passed as raw value (1); RoBMA standardizes internally.
+# The binary moderator is encoded as a factor with levels c(0, 1) to match the
+# factor coding used when the model was fit in Protocol_Table10.R, so that
+# predict() applies the same contrasts.
 
 bp1 <- data.frame(
-  SC1_Cognitive  = 1,
-  LaggedDV       = 0,
-  NumberSCVars   = 1,
-  Endog_FE       = 1,
-  Reg_OECDEurope = 0,   # Non-OECD/Europe: all four region dummies = 0
-  Reg_US         = 0,
-  Reg_Africa     = 0,
-  Reg_Asia       = 0
+  Endog_FE       = factor(1, levels = c(0, 1)),
+  Reg_OECDEurope = factor(0, levels = c(0, 1))   # Non-OECD/Europe
 )
 
 bp2 <- data.frame(
-  SC1_Cognitive  = 1,
-  LaggedDV       = 0,
-  NumberSCVars   = 1,
-  Endog_FE       = 1,
-  Reg_OECDEurope = 1,   # OECD/Europe
-  Reg_US         = 0,
-  Reg_Africa     = 0,
-  Reg_Asia       = 0
+  Endog_FE       = factor(1, levels = c(0, 1)),
+  Reg_OECDEurope = factor(1, levels = c(0, 1))   # OECD/Europe
 )
 
 # ---- PREDICTIONS ----
@@ -118,22 +116,28 @@ print(panel_bp2)
 # explicitly rather than truncated, and the note is printed to console
 # and saved to its own "Notes" sheet rather than appended as table rows.
 #
-# RoBMA's meta-regression (Table 10) uses only the 8 moderators retained
-# after BIC pre-selection (Table 9) plus the four region dummies. Unlike
-# Part 1 Table 7, se(z) and publication year are not covariates here:
-# RoBMA corrects for publication bias internally rather than through a
-# linear se(z) term, and publication year was not among the moderators
-# retained by Table 9's BIC pre-selection.
+# RoBMA's meta-regression (Table 10) uses the moderators retained after BIC
+# pre-selection (Table 9) plus one region dummy, Reg_OECDEurope (Reg_US,
+# Reg_Africa, and Reg_Asia are folded into the reference category -- see
+# Protocol_Table10.R). Unlike Part 1 Table 7, se(z) and publication year are
+# not covariates here: RoBMA corrects for publication bias internally rather
+# than through a linear se(z) term, and publication year was not among the
+# moderators retained by Table 9's BIC pre-selection. SC1_Cognitive, LaggedDV,
+# and NumberSCVars are also not covariates here as of the 2026-07-24
+# respecification -- the current, reproducible Table 9 BIC run does not
+# retain them (see Protocol_Table10.R and CLAUDE.md).
 
 bp_note <- function(Reg_OECDEurope_bp) {
   paste0(
     "\"Best Practice\" predictions are derived from the RoBMA meta-regression in Table 10. ",
-    "Predictions are evaluated at SC1_Cognitive = 1, LaggedDV = 0, NumberSCVars = 1, Endog_FE = 1, ",
-    "Reg_OECDEurope = ", Reg_OECDEurope_bp, ", Reg_US = 0, Reg_Africa = 0, Reg_Asia = 0 ",
-    "(Reg_Other implied as the reference category when all four region dummies are 0). ",
-    "se(z) and publication year are not covariates in this model: RoBMA corrects for publication ",
-    "bias internally rather than through a linear se(z) term, and publication year was not retained ",
-    "by the BIC pre-selection in Table 9."
+    "Predictions are evaluated at Endog_FE = 1, ",
+    "Reg_OECDEurope = ", Reg_OECDEurope_bp, " ",
+    "(the reference category -- combining Reg_US, Reg_Africa, Reg_Asia, and Reg_Other -- is implied ",
+    "when Reg_OECDEurope = 0). se(z) and publication year are not covariates in this model: RoBMA ",
+    "corrects for publication bias internally rather than through a linear se(z) term, and publication ",
+    "year was not retained by the BIC pre-selection in Table 9. No other moderator is retained by ",
+    "that pre-selection, so the model conditions on Endog_FE and Reg_OECDEurope only (see the ",
+    "Decision point following Table 10)."
   )
 }
 
@@ -160,7 +164,7 @@ write_xlsx(
     "BP2 - OECD Europe"     = panel_bp2,
     "Notes"                 = notes_sheet
   ),
-  "Table11_RoBMA_BestPractice.xlsx"
+  here("Table11_RoBMA_BestPractice.xlsx")
 )
 cat("\nResults saved to Table11_RoBMA_BestPractice.xlsx\n")
 

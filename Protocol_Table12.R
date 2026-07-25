@@ -1,5 +1,3 @@
-setwd("C:/PROTOCOL OF MAs WITH DEPENDENT DATA")
-
 # Record start time -- printed at the end so run time can be documented.
 start_time <- proc.time()
 
@@ -10,7 +8,7 @@ start_time <- proc.time()
 # Table 12 pulls together, in one place, the key numbers that
 # Section 10 uses to compare FAT-PET and RoBMA. It does not run
 # any new models -- it simply reads the already-produced output
-# files from Tables 4, 5, 7, 8, and 11 and assembles the seven
+# files from Tables 4, 5, 7, 10, and 11 and assembles the seven
 # numbers discussed in "The core comparison" into a single table.
 # This keeps Section 10 from having to repeat those numbers in
 # prose, and keeps the summary table automatically in sync with
@@ -42,11 +40,12 @@ start_time <- proc.time()
 # Install and load required packages
 # ============================================================
 
-packages <- c("readxl", "tidyverse", "writexl")
+packages <- c("here", "readxl", "tidyverse", "writexl")
 
 installed <- packages %in% installed.packages()[, "Package"]
 if (any(!installed)) install.packages(packages[!installed])
 
+library(here)       # resolves file paths relative to the project root (.Rproj)
 library(readxl)    # read the source Excel files
 library(tidyverse) # data manipulation
 library(writexl)   # export to Excel
@@ -55,7 +54,7 @@ library(writexl)   # export to Excel
 # 1. Uncorrected CHE mean (Table 4)
 # ============================================================
 
-tbl4 <- read_excel("Table4_Protocol.xlsx", col_types = "text")
+tbl4 <- read_excel(here("Table4_Protocol.xlsx"), col_types = "text")
 
 che_raw_est <- tbl4$CHE[tbl4$Variable == "Constant"]
 che_raw_ci  <- tbl4$CHE[tbl4$Variable == "95% CI"]
@@ -64,28 +63,31 @@ che_raw_ci  <- tbl4$CHE[tbl4$Variable == "95% CI"]
 # 2. FAT-PET corrected mean, unconditional (Table 5, Panel B)
 # ============================================================
 
-tbl5b <- read_excel("Table5_Protocol.xlsx", sheet = "Panel B - Full controls", col_types = "text")
+tbl5b <- read_excel(here("Table5_Protocol.xlsx"), sheet = "Panel B - Full controls", col_types = "text")
 
 fatpet_uncond_est <- tbl5b$CHE[tbl5b$Variable == "Effect beyond bias"]
 fatpet_uncond_ci  <- tbl5b$CHE[tbl5b$Variable == "95% CI"]
 
 # ============================================================
-# 3. RoBMA corrected mean, unconditional (Table 8)
+# 3. RoBMA corrected mean, unconditional (Table 10)
 # ============================================================
 #
-# Table 8's "Uncertainty" column already stores the credible
-# interval as text (e.g. "95% CI [0.073, 0.170]", using generic
-# "CI" language). We pull out just the bracketed part and
-# re-label it "95% CrI" here for accuracy, since this interval
-# comes from RoBMA's posterior distribution, not a sampling
-# distribution.
+# This is the average-study bias-corrected mean from the RoBMA
+# meta-regression: the model-averaged (publication-bias-corrected)
+# grand-mean marginal mean, with the continuous moderator at its
+# mean and the factor moderators averaged across their levels under
+# RoBMA's default mean-difference contrasts. It is the RoBMA analogue
+# of the FAT-PET Panel B intercept (both are with-controls corrected
+# means at the moderator means), and it replaces the intercept-only
+# Table 8 figure used previously. Table 10 stores it (Fisher's z) with
+# a 95% credible interval on its "AverageStudy" sheet.
 # ============================================================
 
-tbl8 <- read_excel("Table8_RoBMA_Comparison.xlsx", sheet = "Comparison")
+tbl10_avg <- read_excel(here("Table10_RoBMA_MetaRegression.xlsx"), sheet = "AverageStudy")
 
-robma_uncond_row <- tbl8[tbl8$Estimator == "RoBMA", ]
-robma_uncond_est <- formatC(robma_uncond_row$Mean_Fishers_z, digits = 3, format = "f")
-robma_uncond_ci  <- str_extract(robma_uncond_row$Uncertainty, "\\[.*\\]")
+robma_uncond_est <- formatC(tbl10_avg$Mean[1], digits = 3, format = "f")
+robma_uncond_ci  <- paste0("[", formatC(tbl10_avg$`2.5%`[1],  digits = 3, format = "f"),
+                           ", ", formatC(tbl10_avg$`97.5%`[1], digits = 3, format = "f"), "]")
 
 # ============================================================
 # 4. Best-practice predictions: FAT-PET (Table 7) and RoBMA (Table 11)
@@ -98,7 +100,7 @@ robma_uncond_ci  <- str_extract(robma_uncond_row$Uncertainty, "\\[.*\\]")
 # ============================================================
 
 get_bp_row <- function(file, sheet) {
-  tbl <- read_excel(file, sheet = sheet)
+  tbl <- read_excel(here(file), sheet = sheet)
   tbl[tbl$`Effect Size` == "Fisher's z", ]
 }
 
@@ -138,7 +140,7 @@ table_out <- tibble(
     fatpet_bp2$`95% CI`, robma_bp2$`95% CI`
   ),
   Source = c(
-    "Table 4", "Table 5 (Panel B)", "Table 8",
+    "Table 4", "Table 5 (Panel B)", "Table 10",
     "Table 7", "Table 11", "Table 7", "Table 11"
   )
 )
@@ -147,7 +149,7 @@ table_out <- tibble(
 # Export to Excel
 # ============================================================
 
-write_xlsx(table_out, "Table12_ComparisonSummary.xlsx")
+write_xlsx(table_out, here("Table12_ComparisonSummary.xlsx"))
 
 cat("Done. Output saved to Table12_ComparisonSummary.xlsx\n")
 

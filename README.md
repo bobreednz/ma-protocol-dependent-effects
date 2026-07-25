@@ -13,12 +13,12 @@ The protocol is illustrated with data from Xue, Reed, and van Aert (2025), a met
 | Type | Files |
 |---|---|
 | Protocol document | `Protocol_Combined.qmd` (source), `Protocol_Combined.html` (rendered) |
-| Analysis scripts | 19 `Protocol_*.R` scripts, one per analytical step |
+| Analysis scripts | 21 `Protocol_*.R` scripts, one per analytical step |
 | Data | `SCData (20240508).dta` (raw), `SCData_processed.rds` (analysis dataset), `SCData_flagged.dta` (raw data plus quality-check flags) |
 | Pre-computed outputs | All `Table*.xlsx` and `Figure*.png` files, plus `DataCleaning_Report.xlsx` |
-| Fitted RoBMA models | `RoBMA_intercept_only.rds`, `RoBMA_metaregression.rds` |
+| Fitted RoBMA models | `RoBMA_intercept_only.rds`, `RoBMA_metaregression.rds`, `RoBMA_metaregression_FYI.rds` |
 
-The pre-computed outputs and fitted RoBMA models are included so that you can render the full document and inspect every result **immediately**, without first running the computationally expensive steps. The two RoBMA model fits alone take roughly 5 and 4 hours of MCMC sampling; loading the saved `.rds` files skips that entirely.
+The pre-computed outputs and fitted RoBMA models are included so that you can render the full document and inspect every result **immediately**, without first running the computationally expensive steps. The three RoBMA model fits alone take roughly 5, 3, and 6 hours of MCMC sampling; loading the saved `.rds` files skips that entirely.
 
 ## Getting started
 
@@ -32,6 +32,7 @@ You need R (version 4.2 or later recommended), RStudio, and Quarto (bundled with
 
 ```r
 install.packages(c(
+  "here",          # resolves file paths relative to the project root (.Rproj)
   "metafor",       # meta-analytic models
   "clubSandwich",  # cluster-robust (CR2) standard errors
   "tidyverse",     # data manipulation and plotting
@@ -52,15 +53,9 @@ remotes::install_github("jepusto/metaselection")
 
 Note: `RoBMA` requires the JAGS sampler. If `install.packages("RoBMA")` reports a JAGS problem, install JAGS first from https://mcmc-jags.sourceforge.io and then reinstall RoBMA.
 
-### 3. Point the scripts at your folder
+### 3. Open the project
 
-Every script begins with a `setwd()` line that sets the working directory:
-
-```r
-setwd("C:/PROTOCOL OF MAs WITH DEPENDENT DATA")
-```
-
-Replace that path with the folder where you unzipped the files. The fastest way is RStudio's **Edit > Find in Files** (Ctrl+Shift+F): search for `C:/PROTOCOL OF MAs WITH DEPENDENT DATA`, set the directory to your unzipped folder, and replace all occurrences with your own path. The same path appears once in the `setup` chunk of `Protocol_Combined.qmd`.
+No path to edit. The repository includes an RStudio Project file, `MA_Protocol.Rproj`. Open it (double-click, or File > Open Project in RStudio) and your working directory is set to the project folder automatically, wherever you unzipped it. Every script and the protocol document itself locate their files with `here("filename")`, which resolves relative to the project root regardless of your operating system, username, or where the folder lives on your machine. There is no `setwd()` anywhere in this repository to edit.
 
 ### 4. Open the protocol and work through it
 
@@ -90,9 +85,11 @@ Open `Protocol_Combined.qmd` in RStudio. You can use it two ways.
 | `Protocol_Table10.R` | RoBMA meta-regression | **~4 hours** |
 | `Protocol_Table11.R` | RoBMA best-practice predictions | ~1 min |
 | `Protocol_Table12.R` | Summary comparison of PET-PEESE and RoBMA estimates | seconds |
+| `Protocol_Table10_FYI.R` | Appendix C: RoBMA meta-regression, alternative moderator set | **~6 hours** (doubled MCMC budget) |
+| `Protocol_Table11_FYI.R` | Appendix C: best-practice predictions, alternative moderator set | ~2 min |
 | `Protocol_Outliers.R` | Influence diagnostics + jackknife | **~2 hours** |
 
-The three long-running scripts save their fitted models (`.rds` files), which downstream scripts load instead of refitting. Since those `.rds` files are included in the repository, you can reproduce Tables 8 and 11 without running the 5-hour and 4-hour fits — only run `Protocol_Figure3.R` and `Protocol_Table10.R` if you want to verify the MCMC estimation itself.
+The long-running RoBMA scripts save their fitted models (`.rds` files), which downstream scripts load instead of refitting. Since those `.rds` files are included in the repository, you can reproduce Tables 8 and 11 and the Appendix C predictions without running the multi-hour fits — only run `Protocol_Figure3.R`, `Protocol_Table10.R`, or `Protocol_Table10_FYI.R` if you want to verify the MCMC estimation itself.
 
 ## Using this protocol with your own data
 

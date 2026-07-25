@@ -1,13 +1,12 @@
+library(here)          # resolves file paths relative to the project root (.Rproj)
 library(metafor)      # rma.mv() for CHE meta-regression
 library(openxlsx)     # save xlsx
-
-setwd("C:/PROTOCOL OF MAs WITH DEPENDENT DATA")
 
 # Record overall start time
 start_time <- proc.time()
 
 # ---- LOAD DATA ----
-dat <- readRDS("SCData_processed.rds")
+dat <- readRDS(here("SCData_processed.rds"))
 
 # Compute Fisher's z and its standard error from the raw partial correlations.
 # z = atanh(pcc); sez = sqrt(1 / (df - 1)), the SE of Fisher's z for a PCC.
@@ -197,7 +196,7 @@ note <- data.frame(
 )
 writeData(wb, "BIC_Selection", note, startRow = nrow(display_table) + 3, colNames = FALSE)
 
-saveWorkbook(wb, "Table9_BIC_ModeratorSelection.xlsx", overwrite = TRUE)
+saveWorkbook(wb, here("Table9_BIC_ModeratorSelection.xlsx"), overwrite = TRUE)
 cat("Results saved to Table9_BIC_ModeratorSelection.xlsx\n")
 
 cat("\nProtocol_Table9.R complete.\n")
