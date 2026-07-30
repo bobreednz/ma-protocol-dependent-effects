@@ -14,6 +14,67 @@ dat$vi <- 1 / (dat$df - 1)
 # ---- FIT INTERCEPT-ONLY MULTILEVEL RoBMA ----
 # cluster = newid specifies effect sizes nested within studies.
 # measure = "ZCOR" tells RoBMA the input is Fisher's z transformed correlations.
+#
+# ---- ADAPTING THIS SCRIPT FOR A DIFFERENT EFFECT SIZE ----
+# Fisher's z is one of six standardized effect-size types RoBMA supports
+# directly via the measure argument, with no further setup: "SMD", "ZCOR",
+# "RR", "OR", "HR", and "IRR". Each has a known unit information standard
+# deviation (UISD) built into the package, which is what lets measure =
+# "ZCOR" work here without any additional scaling step.
+#
+# A nonstandard effect size without a known UISD -- a raw (unstandardized)
+# regression coefficient being the most common example a researcher adapting
+# this protocol is likely to encounter -- needs measure = "GEN" instead, plus
+# one of the following two approaches (per direct correspondence with
+# Frantisek Bartos, RoBMA's developer, 2026-07-28, and confirmed against
+# "RoBMA documentation.pdf" in this folder):
+#
+#   1. If sample sizes are available for every effect size, pass them as an
+#      additional ni argument alongside the usual yi/vi:
+#
+#        fit <- RoBMA(
+#          yi      = yi,       # raw regression coefficients
+#          vi      = vi,       # their squared standard errors
+#          ni      = ni,       # sample size for each estimated coefficient
+#          measure = "GEN",
+#          mods    = ~ ...,
+#          cluster = newid,
+#          ...
+#        )
+#
+#      RoBMA uses ni (together with vi) to estimate the UISD automatically
+#      and scale its default priors accordingly -- no other change is needed.
+#
+#   2. If sample sizes are only available for some of the effect sizes,
+#      compute the UISD once from that subset via
+#      estimate_unit_information_sd() and pass the resulting number in
+#      through prior_unit_information_sd, instead of supplying ni for every
+#      observation:
+#
+#        uisd <- estimate_unit_information_sd(sei = sei_subset, ni = ni_subset)
+#        fit  <- RoBMA(
+#          yi = yi, vi = vi, measure = "GEN",
+#          prior_unit_information_sd = uisd,
+#          mods = ~ ..., cluster = newid, ...
+#        )
+#
+#      estimate_unit_information_sd() requires complete (non-missing) sei/ni
+#      vectors, so it is run only on the subset of studies where both are
+#      actually available; the single UISD value it returns is then reused
+#      for the full model.
+#
+# Two further points:
+#
+#   - This only affects RoBMA (this script, Protocol_Table10.R, and
+#     Protocol_Table10_FYI.R). The CHE/FAT-PET machinery in Tables 4-7 is
+#     built on metafor, which only needs yi and vi and is indifferent to
+#     what scale the effect size is on.
+#   - The atanh()/tanh() transform-and-back-transform steps used throughout
+#     this protocol (see TRANSFORM TO FISHER'S Z above, and the PCC
+#     back-transform in the Table 7/11 scripts) are specific to correlational
+#     effect sizes and should simply be omitted for a raw regression
+#     coefficient or any other non-correlational measure.
+
 cat("Fitting intercept-only multilevel RoBMA...\n")
 time_fit <- system.time({
   fit <- RoBMA(

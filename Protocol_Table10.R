@@ -2,6 +2,7 @@ library(here)     # resolves file paths relative to the project root (.Rproj)
 library(haven)
 library(RoBMA)
 library(openxlsx)
+library(posterior)  # as_draws(), used to extract pooled_effect() draws below
 
 # Record overall start time
 start_time <- proc.time()
@@ -22,10 +23,11 @@ dat$vi <- 1 / (dat$df - 1)
 # types differently. A numeric or integer predictor is treated as continuous and
 # internally standardized (standardize_predictors = TRUE by default), which
 # applies the continuous-predictor prior on the wrong (per-SD) scale for a binary
-# indicator. A factor is instead given the categorical-moderator prior with mean-
-# difference ("meandif") contrasts, which is RoBMA's default. We keep that default
-# rather than switching to treatment (dummy) contrasts; the Section 9 discussion
-# explains why. The binaries are therefore declared as factors here.
+# indicator. A factor is instead given the categorical-moderator prior, so the
+# binaries are declared as factors here. As of 2026-07-27, both factors are fit
+# with treatment (dummy) contrasts rather than RoBMA's meandif default -- see the
+# set_contrast_factor_predictors argument in the RoBMA() call below, and the note
+# there on why this changed (per Frantisek Bartos's direct advice).
 binary_mods <- c("Endog_FE", "Reg_OECDEurope")
 for (v in binary_mods) {
   dat[[v]] <- as.factor(dat[[v]])
@@ -113,6 +115,13 @@ cat(sprintf("\nBinary moderators declared as factors: %s\n",
 # should be somewhat faster, but treat that as a rough expectation rather
 # than a guarantee.
 
+# NOTE ON OTHER EFFECT SIZES: measure = "ZCOR" is used here because the
+# input is Fisher's z-transformed partial correlations. For a nonstandard
+# effect size without a known unit information standard deviation (e.g., a
+# raw regression coefficient), see the detailed comment in Protocol_Figure3.R
+# (the first script in this protocol to fit a RoBMA model) for how to adapt
+# this call using measure = "GEN".
+
 cat("Fitting multilevel RoBMA meta-regression...\n")
 cat("Expected runtime: roughly 3-4 hours, possibly less.\n\n")
 
@@ -123,10 +132,15 @@ time_fit <- system.time({
     measure  = "ZCOR",
     mods     = ~ Endog_FE + Reg_OECDEurope,
     cluster  = newid,
-    # Factor moderators keep RoBMA's default mean-difference ("meandif")
-    # contrasts, so the model-averaged intercept is the grand-mean (average-study)
-    # effect. This is used as the "unconditional" RoBMA corrected mean in Table 12
-    # (see the marginal_means() step below and the Section 9 discussion).
+    # Both factor moderators use treatment (dummy) contrasts rather than RoBMA's
+    # meandif default. Per Frantisek Bartos (email correspondence, 2026-07-27):
+    # for a Table-5-comparable "average study" estimate, the pooled_effect()
+    # function should always be used regardless of contrast coding, but treatment
+    # contrasts are the more suited pairing with pooled_effect() for a model like
+    # this one. The "unconditional" RoBMA corrected mean in Table 12 is therefore
+    # now computed via pooled_effect() (see below), not marginal_means() under
+    # meandif contrasts as in the prior version of this script.
+    set_contrast_factor_predictors = "treatment",
     sample   = 20000,   # protocol-standard settings (matches Protocol_Figure3.R
     burnin   = 10000,   # and the "Standard MCMC settings" note in the RoBMA
     adapt    = 10000,   # Technical Notes), not the doubled budget tried during
@@ -167,20 +181,22 @@ print(s)
 cat("\nSummary object fields:", paste(names(s), collapse = ", "), "\n\n")
 
 # ---- AVERAGE-STUDY BIAS-CORRECTED MEAN (for Table 12) ----
-# marginal_means() returns model-averaged marginal means. Under RoBMA's default
-# mean-difference ("meandif") contrasts, the "intercept" marginal mean is the
-# overall grand-mean effect: the model-averaged (publication-bias-corrected) mean
-# for an average study, with the continuous moderator at its mean and the factor
-# moderators averaged symmetrically across their levels. This is the RoBMA
-# analogue of the FAT-PET Panel B intercept (Table 5), which is evaluated at the
-# moderator means, and it is carried into Table 12 as the "unconditional" RoBMA
-# corrected mean. (That this value sits well below the raw mean of ~0.175, close
-# to the intercept-only bias-corrected mean in Table 8, confirms the marginal
-# mean is bias-corrected.) The credible interval is computed directly from the
-# model-averaged posterior draws for the intercept marginal mean.
-cat("Computing average-study marginal mean...\n")
-mm       <- marginal_means(fit)
-mu_draws <- as.numeric(mm$inference$averaged$mu_intercept$intercept)
+# pooled_effect() returns RoBMA's sample-weighted pooled estimate: the
+# model-averaged (publication-bias-corrected) effect averaged across the
+# moderators' actual empirical distribution in this dataset, not an unweighted
+# average across factor levels the way marginal_means() computes it. Per
+# Frantisek Bartos (email correspondence, 2026-07-27), pooled_effect() -- not
+# marginal_means() -- is the quantity that corresponds to Table 5's CHE PET
+# intercept (itself evaluated at the sample's actual covariate composition),
+# regardless of which factor contrast the model was fit with. This replaces the
+# marginal_means()-based extraction used in the prior version of this script.
+# pooled_effect() returns an object that must be passed through as_draws()
+# (posterior package) to get the underlying MCMC draws, here a single-variable
+# draws_matrix ("mu") that flattens cleanly with as.numeric().
+cat("Computing pooled effect (average-study bias-corrected mean)...\n")
+pe       <- pooled_effect(fit)
+pe_draws <- as_draws(pe)
+mu_draws <- as.numeric(pe_draws)
 avg_study <- data.frame(
   Quantity = "Average-study bias-corrected mean (Fisher's z)",
   Mean     = mean(mu_draws),
@@ -219,6 +235,16 @@ writeData(wb, "ModeratorInclusion",
 # Sheet 3: Model-averaged regression coefficients (intercept + moderators)
 # s$estimates_scale contains the intercept; s$estimates_mods contains the
 # moderator coefficients. Combine into one sheet.
+# Confirmed 2026-07-27, under treatment contrasts: each binary moderator now
+# reports a single treatment-effect coefficient (row labels Endog_FE[1],
+# Reg_OECDEurope[1]) -- the level-1-vs-reference-level difference, directly
+# comparable to CHE's coefficients with no subtraction needed -- rather than
+# the meandif-based dif:0/dif:1 row pairs this script previously produced.
+# The intercept (0.132 in the 2026-07-27 run) represents the reference-level
+# combination (Endog_FE = 0, Reg_OECDEurope = 0), not a grand mean across
+# levels; it is not the same quantity as the pooled_effect()-based
+# AverageStudy figure below (0.122 in that same run), which is why Table 12
+# sources its RoBMA-unconditional row from AverageStudy, not from this sheet.
 addWorksheet(wb, "Coefficients")
 writeData(wb, "Coefficients",
           rbind(to_df(s$estimates_scale, "Parameter"),
@@ -235,8 +261,8 @@ addWorksheet(wb, "PublicationBias")
 writeData(wb, "PublicationBias",
           to_df(s$estimates_bias, "Parameter"))
 
-# Sheet 6: Average-study bias-corrected mean (grand-mean marginal mean), the
-# "unconditional" RoBMA corrected mean carried into Table 12.
+# Sheet 6: Average-study bias-corrected mean (pooled_effect(), sample-weighted),
+# the "unconditional" RoBMA corrected mean carried into Table 12.
 addWorksheet(wb, "AverageStudy")
 writeData(wb, "AverageStudy", avg_study)
 

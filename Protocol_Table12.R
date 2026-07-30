@@ -73,14 +73,19 @@ fatpet_uncond_ci  <- tbl5b$CHE[tbl5b$Variable == "95% CI"]
 # ============================================================
 #
 # This is the average-study bias-corrected mean from the RoBMA
-# meta-regression: the model-averaged (publication-bias-corrected)
-# grand-mean marginal mean, with the continuous moderator at its
-# mean and the factor moderators averaged across their levels under
-# RoBMA's default mean-difference contrasts. It is the RoBMA analogue
-# of the FAT-PET Panel B intercept (both are with-controls corrected
-# means at the moderator means), and it replaces the intercept-only
-# Table 8 figure used previously. Table 10 stores it (Fisher's z) with
-# a 95% credible interval on its "AverageStudy" sheet.
+# meta-regression: pooled_effect(), the model-averaged (publication-
+# bias-corrected) effect averaged across the moderators' actual
+# empirical distribution in this dataset. As of 2026-07-27, Table 10
+# fits both factor moderators with treatment contrasts and computes
+# this quantity via pooled_effect() rather than marginal_means() under
+# meandif contrasts, per Frantisek Bartos's direct advice that
+# pooled_effect() -- not marginal_means() -- is the quantity
+# corresponding to Table 5's CHE PET intercept, regardless of contrast
+# coding. It is the RoBMA analogue of the FAT-PET Panel B intercept
+# (both are with-controls corrected means at the sample's actual
+# covariate composition), and it replaces the intercept-only Table 8
+# figure used previously. Table 10 stores it (Fisher's z) with a 95%
+# credible interval on its "AverageStudy" sheet.
 # ============================================================
 
 tbl10_avg <- read_excel(here("Table10_RoBMA_MetaRegression.xlsx"), sheet = "AverageStudy")
