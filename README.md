@@ -1,105 +1,122 @@
 # A Protocol for Meta-Analysis with Dependent Effect Sizes
 
-**W. Robert Reed** (Department of Economics and Finance & UCMeta, University of Canterbury) — bob.reed@canterbury.ac.nz
+**W. Robert Reed** (Department of Economics and Finance & UCMeta, University of Canterbury; corresponding author, bob.reed@canterbury.ac.nz)  
+**Elizabeth Tipton** (School of Education and Social Policy, Northwestern University)  
+**František Bartoš** (Faculty of Social and Behavioural Sciences, University of Amsterdam; Institute of Economic Studies, Faculty of Social Sciences, Charles University, Prague)
 
-This repository contains a complete, step-by-step protocol for conducting a meta-analysis when effect size estimates are statistically dependent (multiple estimates per study). The protocol is written as a Quarto document (`Protocol_Combined.qmd`) that walks through every analytical decision, sources the R script for each step, and displays the resulting tables and figures. It covers data cleaning, preliminary analysis, the choice of the within-study correlation (rho), five meta-analytic estimators (FE, RE, CE, HE, and the preferred CHE model), publication bias analysis using PET-PEESE plus robustness checks (CHE-ISCW weighting and step-function selection models), meta-regression combining Bayesian Model Averaging with CHE, best-practice effect size predictions, and a full Robust Bayesian Meta-Analysis (RoBMA) extension with a concluding comparison of the PET-PEESE and RoBMA corrections, summarized in a final comparison table.
+This repository contains a step-by-step protocol, written in R, for carrying out a meta-analysis when studies report more than one effect size estimate. The protocol is a Quarto document (`Protocol_Combined.qmd`). It explains each analytical decision, sources the R script that carries it out, and displays the resulting tables and figures.
 
-The protocol is illustrated with data from Xue, Reed, and van Aert (2025), a meta-analysis of the effect of social capital on economic growth (957 effect sizes from 83 studies), but every step applies to any meta-analytic database with dependent effect sizes.
+The protocol takes the researcher from the raw data to the final answer. It covers data cleaning and preliminary analysis; the choice of dependence model, comparing five estimators and choosing the correlated and hierarchical effects (CHE) model; three corrections for publication bias (PET-PEESE, step-function selection models, and robust Bayesian meta-analysis, RoBMA); a diagnosis of the selection process that chooses the primary correction; meta-regression and best-practice predictions for all three corrections; and a summary of how sensitive the results are to the choice of correction.
 
-**Read the rendered protocol in your browser** at the GitHub Pages site for this repository, or open `Protocol_Combined.html` after downloading.
+The protocol is illustrated with data from Xue, Reed, and van Aert (2025), a meta-analysis of social capital and economic growth (957 effect sizes from 83 studies). The dataset is only a running example. Every step applies to any meta-analytic database with dependent effect sizes.
+
+**Read the protocol in your browser** at <https://bobreednz.github.io/ma-protocol-dependent-effects/>, or open `Protocol_Combined.html` after downloading.
 
 ## What is in this repository
 
 | Type | Files |
 |---|---|
-| Protocol document | `Protocol_Combined.qmd` (source), `Protocol_Combined.html` (rendered) |
-| Analysis scripts | 21 `Protocol_*.R` scripts, one per analytical step |
+| Protocol document | `Protocol_Combined.qmd` (source) and `Protocol_Combined.html` (rendered). The `docs/` folder holds the copy served by GitHub Pages (`protocol.html`) and the landing page (`index.html`). |
+| Analysis scripts | 20 `Protocol_*.R` scripts, one per analytical step (listed in the run-order table below), plus `Protocol_Install.R`, which installs the required packages |
 | Data | `SCData (20240508).dta` (raw), `SCData_processed.rds` (analysis dataset), `SCData_flagged.dta` (raw data plus quality-check flags) |
-| Pre-computed outputs | All `Table*.xlsx` and `Figure*.png` files, plus `DataCleaning_Report.xlsx` |
-| Fitted RoBMA models | `RoBMA_intercept_only.rds`, `RoBMA_metaregression.rds`, `RoBMA_metaregression_FYI.rds` |
+| Saved model fits | RoBMA and Bayesian model averaging: `fit_RoBMA_CHE_intercept.rds`, `fit_BMA_CHE_intercept.rds`, `fit_RoBMA_CHE_reg18.rds`, `fit_BMA_CHE_reg18.rds`. Selection models: `sel_3psm_intercept.rds`, `sel_4psm_intercept.rds`, `sel_4psm_reg18_mean.rds`, `sel_4psm_reg18_bp1.rds`, `sel_4psm_reg18_bp2.rds` |
+| Outputs | All `Table_*.xlsx` and `Figure_*.png` files, plus `DataCleaning_Report.xlsx` |
+| Project files | `MA_Protocol.Rproj`, `.here`, `CITATION.cff` |
+| Archive | `archive_HE_RoBMA/` and `archive_superseded/`: scripts and outputs from earlier versions of the protocol, kept for reference and not used by the current document |
 
-The pre-computed outputs and fitted RoBMA models are included so that you can render the full document and inspect every result **immediately**, without first running the computationally expensive steps. The three RoBMA model fits alone take roughly 5, 3, and 6 hours of MCMC sampling; loading the saved `.rds` files skips that entirely.
+The outputs and saved fits are included so that you can render the document and inspect every result immediately. The two RoBMA fits take about 4.5 and 5.5 hours of MCMC sampling, and the selection-model meta-regression takes 15 to 20 minutes of bootstrapping. Loading the saved files skips all of this.
 
 ## Getting started
 
 ### 1. Download the files
 
-Click the green **Code** button at the top of this page and choose **Download ZIP** (or clone the repository if you use git). Unzip to a folder on your computer, for example `C:/MA_PROTOCOL`.
+Click the green **Code** button at the top of this page and choose **Download ZIP** (or clone the repository if you use git). Unzip it to a folder on your computer. Keep all the files together in that one folder.
 
 ### 2. Install the software
 
-You need R (version 4.2 or later recommended), RStudio, and Quarto (bundled with recent RStudio versions). Then install the required packages in R:
+You need R, RStudio, and Quarto (bundled with recent versions of RStudio). RoBMA also needs JAGS (Just Another Gibbs Sampler), a standalone program that does the MCMC sampling. JAGS is not an R package. Download and install JAGS (version 4.3.1 or newer) from <https://mcmc-jags.sourceforge.io/> before installing RoBMA.
+
+Then install the R packages. The simplest way is to run `Protocol_Install.R`, which installs everything below and prints the versions installed. The same code is:
 
 ```r
+# Standard packages from CRAN
 install.packages(c(
   "here",          # resolves file paths relative to the project root (.Rproj)
   "metafor",       # meta-analytic models
   "clubSandwich",  # cluster-robust (CR2) standard errors
   "tidyverse",     # data manipulation and plotting
   "haven",         # reading Stata .dta files
+  "readxl",        # reading Excel output in the display chunks
   "writexl",       # writing Excel output
   "openxlsx",      # writing Excel output with formatting
-  "kableExtra",    # table formatting in display chunks
-  "BMS",           # Bayesian Model Averaging
-  "RoBMA",         # Robust Bayesian meta-analysis
-  "future",        # parallel processing
-  "progressr"      # bootstrap progress display
+  "knitr",         # tables and figures in the display chunks
+  "future",        # parallel processing (selection-model bootstrap)
+  "progressr",     # bootstrap progress display
+  "metaselection", # step-function selection models
+  "posterior",     # posterior draws for RoBMA predictions
+  "remotes"        # installing the development version of RoBMA
 ))
 
-# metaselection is on GitHub only (not CRAN):
-# install.packages("remotes")
-remotes::install_github("jepusto/metaselection")
+# RoBMA: the CRAN version (4.0.0) does not include RoBMA.mv(), which the
+# protocol uses to fit the CHE model. Install the development version
+# (after installing JAGS), then restart R.
+remotes::install_github("FBartos/BayesTools@0.3.1-add-random")
+remotes::install_github("FBartos/RoBMA@dev-4-1-0")
 ```
-
-Note: `RoBMA` requires the JAGS sampler. If `install.packages("RoBMA")` reports a JAGS problem, install JAGS first from https://mcmc-jags.sourceforge.io and then reinstall RoBMA.
 
 ### 3. Open the project
 
-No path to edit. The repository includes an RStudio Project file, `MA_Protocol.Rproj`. Open it (double-click, or File > Open Project in RStudio) and your working directory is set to the project folder automatically, wherever you unzipped it. Every script and the protocol document itself locate their files with `here("filename")`, which resolves relative to the project root regardless of your operating system, username, or where the folder lives on your machine. There is no `setwd()` anywhere in this repository to edit.
+Open `MA_Protocol.Rproj` (double-click it, or use File > Open Project in RStudio). This sets the working directory to the project folder, wherever you unzipped it. Every script and the protocol document find their files with `here("filename")`, so there is no path to edit.
 
-### 4. Open the protocol and work through it
+### 4. Render the protocol, or reproduce the results
 
-Open `Protocol_Combined.qmd` in RStudio. You can use it two ways.
+**Render.** Open `Protocol_Combined.qmd` and click **Render**. The document only reads the saved output files, so it renders without running any analysis.
 
-**Read and render.** Click **Render**. Because all output files are included in the repository, the document renders in a minute or two without running any analysis, reproducing the full HTML with every table and figure.
+**Reproduce.** Run the scripts in the order below, then render again. Every script after the first reads `SCData_processed.rds`, the dataset produced by script 1, except three that read only the output of earlier scripts: script 11 needs the saved fit from script 10, script 12 needs scripts 5 and 8 to 10, and script 17 needs scripts 12 to 16. The five slowest scripts (9, 10, 15, 16, and 19) load saved results by default, so the whole sequence runs in under an hour on the example data (about half of it for the z-plot, script 11). To re-estimate, set `refit <- TRUE` at the top of the script. The run times in the table are for a full run, with every script refit.
 
-**Reproduce the results.** Work through the document section by section. Each section has a "Run the script" chunk (`source("Protocol_XXX.R")`). Run these in order to regenerate every output file from the raw data, then re-render the document. Approximate run times on a standard desktop:
+| # | Script | Protocol section | Main output | Full run time |
+|:--|:--|:--|:--|:--|
+| 1 | `Protocol_DataCleaning.R` | 2 Data cleaning | `SCData_processed.rds`, `DataCleaning_Report.xlsx` | seconds |
+| 2 | `Protocol_Variables.R` | 3.1 Variable descriptions | `Table_Variables.xlsx` | seconds |
+| 3 | `Protocol_EffectSizes.R` | 3.2 Effect size distribution | `Table_EffectSizes.xlsx`, `Figure_EffectSizes.png` | seconds |
+| 4 | `Protocol_StudyWeights.R` | 4.2 Study weights | `Table_StudyWeights.xlsx` | seconds |
+| 5 | `Protocol_FiveEstimators.R` | 4 Five models | `Table_FiveEstimators.xlsx` | about 2 minutes |
+| 6 | `Protocol_FunnelPlot.R` | 5.1 Funnel plot | `Figure_FunnelPlot.png` | seconds |
+| 7 | `Protocol_CHE_PET.R`, `Protocol_CHE_PEESE.R` | 5.2 CHE-PET-PEESE | `Table_CHE_PET.xlsx`, `Table_CHE_PEESE.xlsx` | a few minutes each |
+| 8 | `Protocol_CHE_ISCW.R` | 5.2 Robustness check (CHE-ISCW) | `Table_CHE_ISCW.xlsx` | 1 to 3 minutes |
+| 9 | `Protocol_SelectionModels.R` | 5.3 Selection models | `Table_SelectionModels.xlsx` | about 3 minutes |
+| 10 | `Protocol_RoBMA_CHE_Intercept.R` | 5.4 RoBMA | `Table_RoBMA_CHE_Intercept.xlsx` | about 4.5 hours |
+| 11 | `Protocol_Zplot_CHE.R` | 6.1 Z-plot | `Figure_Zplot_CHE.png` | about 25 minutes |
+| 12 | `Protocol_Diagnostics.R` | 6.2 Selection weights | `Table_Diagnostics.xlsx` | seconds |
+| 13 | `Protocol_CHE_PETPEESE_MetaReg.R` | 7.1 CHE-PET-PEESE meta-regression | `Table_CHE_PETPEESE_MetaReg.xlsx` | 1 to 2 minutes |
+| 14 | `Protocol_CHE_PETPEESE_BestPractice.R` | 7.1 Best-practice predictions | `Table_CHE_PETPEESE_BestPractice.xlsx` | under a minute |
+| 15 | `Protocol_Selection_MetaReg.R` | 7.2 Selection-model meta-regression | `Table_Selection_MetaReg.xlsx` | 15 to 20 minutes |
+| 16 | `Protocol_RoBMA_CHE_MetaReg.R` | 7.3 RoBMA meta-regression | `Table_RoBMA_CHE_MetaReg.xlsx` | about 5.5 hours |
+| 17 | `Protocol_Sensitivity.R` | 8 Sensitivity summary | `Table_Sensitivity.xlsx` | seconds |
+| 18 | `Protocol_RhoSensitivity.R` | Appendix A: choice of rho | `Table_RhoSensitivity.xlsx`, two figures | about 6 minutes |
+| 19 | `Protocol_Outliers.R` | Appendix B: outliers | `Table_Jackknife_CHE.xlsx`, two figures | about 1.5 hours |
 
-| Script | Step | Run time |
-|---|---|---|
-| `Protocol_DataCleaning.R` | Data cleaning and quality checks | seconds |
-| `Protocol_Table1.R` | Variable descriptions | seconds |
-| `Protocol_Table2_Figure1.R` | Effect size descriptives and histogram | seconds |
-| `Protocol_Table3.R` | Study weights (FE, RE, HE) | ~1 min |
-| `Protocol_RhoSensitivity.R` | Profile likelihood over rho | ~6 min |
-| `Protocol_Table4.R` | The five estimators | ~2 min |
-| `Protocol_Figure2.R` | Funnel plot | seconds |
-| `Protocol_Table5.R` | FAT-PET regressions | ~4 min |
-| `Protocol_Table5S.R` | PEESE sensitivity | ~4 min |
-| `Protocol_Table6.R` | BMA + CHE meta-regression | ~5 min |
-| `Protocol_Table7.R` | Best-practice predictions (CHE) | ~40 sec |
-| `Protocol_AppendixPubBias.R` | Robustness checks (ISCW, 3PSM/4PSM) | ~5-30 min (bootstrap; uses parallel cores) |
-| `Protocol_Figure3.R` | Intercept-only RoBMA + z-plot | **~5 hours** |
-| `Protocol_Table8.R` | Comparison of corrections | seconds |
-| `Protocol_Table9.R` | BIC moderator pre-selection | ~15 min |
-| `Protocol_Table10.R` | RoBMA meta-regression | **~4 hours** |
-| `Protocol_Table11.R` | RoBMA best-practice predictions | ~1 min |
-| `Protocol_Table12.R` | Summary comparison of PET-PEESE and RoBMA estimates | seconds |
-| `Protocol_Table10_FYI.R` | Appendix C: RoBMA meta-regression, alternative moderator set | **~6 hours** (doubled MCMC budget) |
-| `Protocol_Table11_FYI.R` | Appendix C: best-practice predictions, alternative moderator set | ~2 min |
-| `Protocol_Outliers.R` | Influence diagnostics + jackknife | **~2 hours** |
+Run times are for the example data on a standard desktop computer; with other data they vary with the numbers of estimates, studies, and moderators. The selection-model bootstraps run in parallel and take longer with fewer processor cores.
 
-The long-running RoBMA scripts save their fitted models (`.rds` files), which downstream scripts load instead of refitting. Since those `.rds` files are included in the repository, you can reproduce Tables 8 and 11 and the Appendix C predictions without running the multi-hour fits — only run `Protocol_Figure3.R`, `Protocol_Table10.R`, or `Protocol_Table10_FYI.R` if you want to verify the MCMC estimation itself.
+## Software versions
+
+The results in the protocol were produced with the development versions of RoBMA (4.1.0.226, branch `dev-4-1-0`) and BayesTools (0.3.1.185, branch `0.3.1-add-random`), and with metaselection 0.1.5. The development branches can change, so a fresh installation may give slightly different results. Run `packageVersion("RoBMA")` to see which version you have installed.
 
 ## Using this protocol with your own data
 
-The protocol is written to be adapted. Replace the data file, adjust the variable names in the scripts (the key inputs are an effect size, its standard error, and a study identifier), and work through the same sequence of decisions. Section 1 of the protocol describes what changes when your effect size metric differs from the partial correlations used here.
+The protocol is written as a template. Replace the data file, adjust the variable names in the scripts (the key inputs are an effect size, its standard error, and a study identifier), and work through the same sequence of decisions. Start with `Protocol_DataCleaning.R`, which writes the analysis dataset that every later script reads. Then set `refit <- TRUE` at the top of scripts 9, 10, 15, 16, and 19. These scripts load saved results by default, so without this change they would report the results for the example data.
+
+Each section of the protocol has the same structure. "What to look for" explains how to read the output for any dataset. "Decision point" sets out a choice the researcher must make before going on. "In this example" reports what the output shows for the social capital data. The three corrections for publication bias are always estimated in the same order, so the document works the same way whichever correction your own diagnostics favor. Section 5.4 explains how to use RoBMA with effect sizes other than Fisher's z.
 
 ## Citation
 
-If you use this protocol, please cite the repository, and for the illustrative data:
+If you use this protocol, please cite the repository (GitHub's **Cite this repository** button uses `CITATION.cff`). For the illustrative data, cite:
 
 Xue, X., W. R. Reed, and R. C. M. van Aert. 2025. "Social Capital and Economic Growth: A Meta-Analysis." *Journal of Economic Surveys* 39(4): 1395-1432.
+
+## License
+
+The protocol, scripts, and outputs are released under the Creative Commons Attribution 4.0 International License (CC BY 4.0); see `LICENSE`. You may reuse and adapt them, provided you give appropriate credit. The illustrative dataset comes from Xue, Reed, and van Aert (2025); please cite that article when you use it.
 
 ## Questions
 

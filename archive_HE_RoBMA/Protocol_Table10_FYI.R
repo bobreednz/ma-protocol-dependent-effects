@@ -70,9 +70,10 @@ cat(sprintf("Dataset: %d observations from %d studies.\n",
             nrow(dat), length(unique(dat$newid))))
 
 # ---- FISHER'S Z TRANSFORMATION ----
-# z = atanh(pcc); vi = 1 / (df - 1)
+# z = atanh(pcc); vi = sez^2, the squared reported standard error, the same
+# definition used by every other script in the protocol.
 dat$yi <- atanh(dat$pcc)
-dat$vi <- 1 / (dat$df - 1)
+dat$vi <- dat$sez^2
 
 # ---- VARIABLE TYPES ----
 # Binary (0/1) indicators: declared as factors, matching Protocol_Table10.R's

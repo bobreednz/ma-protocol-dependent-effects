@@ -85,8 +85,8 @@
 
 <header>
   <h1>A Protocol for Meta-Analysis with Dependent Effect Sizes</h1>
-  <p class="subtitle">A step-by-step guide using R, from data cleaning to PET-PEESE and Robust Bayesian Meta-Analysis</p>
-  <p class="author">W. Robert Reed &middot; Department of Economics and Finance &amp; UCMeta, University of Canterbury</p>
+  <p class="subtitle">A step-by-step guide using R, from data cleaning to best-practice estimates corrected for publication bias</p>
+  <p class="author">W. Robert Reed &middot; Elizabeth Tipton &middot; Franti&scaron;ek Barto&scaron;</p>
 </header>
 
 <main>
@@ -101,7 +101,7 @@
 
 <p>Meta-analyses increasingly confront a challenge that standard methods were not designed to handle: studies that contribute more than one effect size estimate, so that estimates from the same study are statistically dependent. Treating dependent estimates as independent overstates the information in the data and produces standard errors that are too small. This protocol provides a complete, reproducible workflow for conducting a meta-analysis with dependent effect sizes in R.</p>
 
-<p>The protocol proceeds through the full sequence of decisions a researcher faces: cleaning and quality-checking the data, describing the effect size distribution and study weights, choosing the within-study correlation (rho), comparing five estimators of increasing complexity and selecting the correlated-and-hierarchical effects (CHE) model, testing and correcting for publication bias with PET-PEESE together with robustness checks based on alternative weighting and step-function selection models, estimating a full meta-regression, and deriving best-practice effect size predictions. It then extends the entire analysis using Robust Bayesian Meta-Analysis (RoBMA), which corrects for publication bias by averaging over competing models of the selection process, and concludes by comparing what the two approaches imply about the same literature.</p>
+<p>The protocol proceeds through the full sequence of decisions a researcher faces: cleaning and quality-checking the data, describing the effect size distribution and study weights, choosing the within-study correlation (rho), and comparing five estimators of increasing complexity before choosing the correlated and hierarchical effects (CHE) model. It then applies three corrections for publication bias (PET-PEESE, step-function selection models, and Robust Bayesian Meta-Analysis, RoBMA), uses the z-plot and the estimated selection weights to choose the primary correction, and estimates the meta-regression and best-practice predictions for all three corrections. A final sensitivity summary shows how much the conclusions depend on the choice of correction.</p>
 
 <p>Every step is illustrated with real data: the 957 effect sizes from 83 studies analyzed in Xue, Reed, and van Aert (2025, <em>Journal of Economic Surveys</em>), a meta-analysis of the effect of social capital on economic growth. All data, code, and pre-computed results are included in the repository, so the document can be rendered and every table and figure inspected without re-running the long Bayesian estimations.</p>
 
@@ -109,9 +109,9 @@
 
 <ol class="steps">
   <li>Download the ZIP file above and unzip it to a folder on your computer.</li>
-  <li>Install R, RStudio, and the required packages listed in the repository README (one <code>install.packages()</code> call plus <code>metaselection</code> from GitHub).</li>
-  <li>Replace the <code>setwd()</code> path at the top of each script (and in the qmd's setup chunk) with your own folder. RStudio's <em>Find in Files</em> does this in one pass; details in the README.</li>
-  <li>Open <code>Protocol_Combined.qmd</code> in RStudio and click <strong>Render</strong> to reproduce the full document from the included outputs, or run each section's <code>source()</code> chunk to regenerate every result from the raw data.</li>
+  <li>Install R, RStudio, and JAGS, then the R packages listed in the repository README (one <code>install.packages()</code> call plus the development version of RoBMA from GitHub).</li>
+  <li>Open the project file <code>MA_Protocol.Rproj</code> in RStudio. Every script finds its files relative to the project folder, so there is no path to edit.</li>
+  <li>Open <code>Protocol_Combined.qmd</code> and click <strong>Render</strong> to reproduce the full document from the included outputs, or run the scripts in the order given in the protocol to regenerate every result from the raw data.</li>
 </ol>
 
 <p>Approximate run times for every script, and guidance on which long-running steps can be skipped by using the included fitted models, are given in the <a id="readme-link" href="#">repository README</a>.</p>

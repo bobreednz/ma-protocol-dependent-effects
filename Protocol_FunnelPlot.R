@@ -51,10 +51,10 @@ cat(sprintf("RE estimate used as funnel center: %.3f (SE = %.3f)\n",
 # visible here -- a concentration of points to the right of
 # the funnel center, especially among less precise studies --
 # is a visual signal of publication bias, motivating the
-# formal PET-PEESE tests in Table 5.
+# formal PET-PEESE tests in Section 5.2.
 # ============================================================
 
-png(here("Figure2_Protocol.png"),
+png(here("Figure_FunnelPlot.png"),
     width = 6, height = 5, units = "in", res = 300)
 
 par(mar = c(4, 4, 2, 1.5))
@@ -65,7 +65,7 @@ metafor::funnel(model_RE,
 
 dev.off()
 
-cat("Figure 2 saved to Figure2_Protocol.png\n")
+cat("Figure 2 saved to Figure_FunnelPlot.png\n")
 
 # ── Run time ──────────────────────────────────────────────────────────────────────────────
 elapsed <- proc.time() - start_time

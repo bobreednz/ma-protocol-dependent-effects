@@ -253,9 +253,9 @@ table_out <- bind_rows(table_out, note_rows)
 # Export to Excel
 # ============================================================
 
-write_xlsx(table_out, here("Table1_Protocol.xlsx"))
+write_xlsx(table_out, here("Table_Variables.xlsx"))
 
-cat("Done. Output saved to Table1_Protocol.xlsx\n")
+cat("Done. Output saved to Table_Variables.xlsx\n")
 cat("Total studies:", n_studies, "\n")
 
 # ── Run time ──────────────────────────────────────────────────────────────────────────────

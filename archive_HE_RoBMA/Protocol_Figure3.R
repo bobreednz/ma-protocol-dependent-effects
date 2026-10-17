@@ -7,9 +7,11 @@ dat <- readRDS(here("SCData_processed.rds"))
 
 # ---- TRANSFORM TO FISHER'S Z ----
 # atanh() applies the Fisher's z transformation to the partial correlations.
-# Variance of Fisher's z for a partial correlation is 1 / (df - 1).
+# The sampling variance is the squared reported standard error, sez^2: the
+# same definition used by every other script in the protocol. (The theoretical
+# value 1 / (df - 1) differs slightly from sez for some estimates.)
 dat$yi <- atanh(dat$pcc)
-dat$vi <- 1 / (dat$df - 1)
+dat$vi <- dat$sez^2
 
 # ---- FIT INTERCEPT-ONLY MULTILEVEL RoBMA ----
 # cluster = newid specifies effect sizes nested within studies.

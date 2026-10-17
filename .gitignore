@@ -10,3 +10,6 @@ Protocol_Combined_files/
 # OS artifacts
 .DS_Store
 Thumbs.db
+
+# Private drafts (not part of the repository)
+*_DRAFT.txt

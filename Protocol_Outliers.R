@@ -23,7 +23,19 @@
 #   Figure_Jackknife_CHE.png    -- leave-one-study-out intercept estimates
 #   Table_Jackknife_CHE.xlsx    -- all studies sorted by absolute change
 #                                  in the leave-one-out intercept
+#
+# Run time: with refit <- FALSE (the default), a few seconds. Part 1 is
+# skipped (the saved Figure_Influence_RE.png is kept), and Part 2 reads the
+# saved jackknife results from Table_Jackknife_CHE.xlsx and redraws the figure.
+# With refit <- TRUE, about 1.5 hours on the example data: about an hour in
+# Part 1, where influence() refits the RE model once for each of the 957
+# estimates, and about 20 minutes in Part 2 (83 CHE model fits). Set refit <- TRUE when
+# you apply the protocol to your own data.
 # =============================================================================
+
+# ── Settings ──────────────────────────────────────────────────────────────────
+
+refit <- FALSE   # TRUE reruns both parts (slow); FALSE loads the saved results
 
 # ── Packages ──────────────────────────────────────────────────────────────────
 
@@ -32,6 +44,7 @@ library(metafor)       # rma() and rma.mv() for meta-analytic models
 library(clubSandwich)  # coef_test() for CR2 clustered standard errors
 library(tidyverse)     # data manipulation and ggplot2 for figures
 library(writexl)       # write_xlsx() to export Excel output
+library(readxl)        # read_excel() to load saved jackknife results
 
 # Record start time -- printed at the end so run time can be documented.
 start_time <- proc.time()
@@ -54,6 +67,12 @@ cat(sprintf("Dataset loaded: %d observations from %d studies.\n",
 # as independent understates uncertainty, but that does not matter here: we are
 # using this model as a screening tool to flag individual effect sizes that are
 # extreme relative to the pooled estimate, not as a primary estimator.
+
+# With refit <- FALSE, Part 1 is skipped: influence() refits the RE model once
+# for each estimate, which is the slowest step in this script. The figure saved
+# by an earlier run with refit <- TRUE is kept.
+
+if (refit) {
 
 re_screen <- rma(
   yi     = z,       # Fisher's z effect size
@@ -99,9 +118,21 @@ cat(sprintf("\nObservations with |studentized residual| > 3: %d\n",
             nrow(extreme_obs)))
 if (nrow(extreme_obs) > 0) print(extreme_obs)
 
+} else {
+  if (!file.exists(here("Figure_Influence_RE.png")))
+    stop("Figure_Influence_RE.png not found. Set refit <- TRUE.")
+  cat("\nPart 1 skipped (refit <- FALSE): keeping the saved Figure_Influence_RE.png.\n")
+}
+
 # =============================================================================
 # Part 2: Study-level jackknife on the CHE model
 # =============================================================================
+
+# With refit <- FALSE, Part 2 also skips the model fits (steps 2a and 2b) and reads
+# the jackknife results saved in Table_Jackknife_CHE.xlsx by an earlier run with
+# refit <- TRUE. The figure (2c) is then redrawn from those results.
+
+if (refit) {
 
 # ── 2a. Full-sample CHE model ─────────────────────────────────────────────────
 
@@ -154,7 +185,7 @@ n_studies <- length(study_ids)
 
 cat(sprintf("\nRunning leave-one-study-out jackknife over %d studies.\n",
             n_studies))
-cat("This takes approximately 2 hours (83 CHE model fits); consider running overnight.\n\n")
+cat("This takes about 20 minutes (83 CHE model fits).\n\n")
 
 # Pre-allocate a results data frame with one row per study.
 jk <- data.frame(
@@ -236,6 +267,30 @@ cat(sprintf("Largest upward shift:   +%.4f (study %d)\n",
 cat(sprintf("Largest downward shift: %.4f (study %d)\n",
             min(jk$change, na.rm = TRUE),
             jk$study[which.min(jk$change)]))
+
+} else {
+
+  # Load the saved jackknife results instead of refitting.
+  if (!file.exists(here("Table_Jackknife_CHE.xlsx")))
+    stop("Table_Jackknife_CHE.xlsx not found. Set refit <- TRUE.")
+  jk_saved <- read_excel(here("Table_Jackknife_CHE.xlsx"), sheet = "Jackknife")
+
+  # Rename the table's display columns back to the names used in the loop.
+  jk <- data.frame(
+    study     = jk_saved$`Study`,
+    n_obs     = jk_saved$`N (obs)`,
+    intercept = jk_saved$`LOO intercept`,
+    se        = jk_saved$`LOO SE`,
+    tau       = jk_saved$`LOO tau`,
+    omega     = jk_saved$`LOO omega`,
+    change    = jk_saved$`Change`
+  )
+  intercept_full <- jk_saved$`Full intercept`[1]
+
+  cat(sprintf("\nLoaded saved jackknife results for %d studies (refit <- FALSE).\n",
+              nrow(jk)))
+  cat(sprintf("Full-sample CHE intercept: %.4f\n", intercept_full))
+}
 
 # ── 2c. Jackknife figure ──────────────────────────────────────────────────────
 
@@ -336,12 +391,15 @@ jk_table <- jk %>%
     `LOO omega`        = round(omega, 4)
   )
 
-write_xlsx(
-  list("Jackknife" = jk_table),
-  path = here("Table_Jackknife_CHE.xlsx")
-)
-
-cat("Table_Jackknife_CHE.xlsx saved.\n")
+# The table is written only after a refit; with refit <- FALSE it already
+# exists and holds the results that were just loaded.
+if (refit) {
+  write_xlsx(
+    list("Jackknife" = jk_table),
+    path = here("Table_Jackknife_CHE.xlsx")
+  )
+  cat("Table_Jackknife_CHE.xlsx saved.\n")
+}
 
 cat("\nAll outputs written:\n")
 cat("  Figure_Influence_RE.png\n")

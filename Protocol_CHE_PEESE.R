@@ -40,15 +40,36 @@ V_mat <- vcalc(
 )
 
 # ============================================================
-# Center all control variables at their sample means.
+# PEESE: create sez^2 as the publication bias regressor
 #
-# This is the key step for Table 5. With centered controls,
-# the intercept in each model directly gives the "Effect
-# beyond bias": the estimated mean effect when sez = 0 (no
-# publication bias) and all controls are at their means
-# (centered values = 0). This means we can read the "Effect
-# beyond bias" and its CR2 standard error directly from
-# coef_test(), with no post-estimation prediction required.
+# PEESE (Precision Effect Estimate with Standard Error)
+# replaces the linear sez term in FAT-PET with sez^2. The
+# rationale is that when a true non-zero effect exists, the
+# relationship between effect size and standard error is
+# nonlinear, and the quadratic specification gives a less
+# biased estimate of the true effect. The intercept of the
+# PEESE regression -- i.e., the predicted effect when sez = 0
+# -- is the PEESE-corrected estimate of the true effect.
+#
+# sez2 does not need to be centered because its best practice
+# value is already zero: when sez = 0, sez^2 = 0.
+#
+# Note: FAT-PET and PEESE are non-nested (different regressors),
+# so AIC/BIC and LR tests should not be used to compare across
+# the two tables. Within this table, cross-model comparisons
+# (e.g. CHE vs CE) remain valid because all five models use
+# the same sez^2 regressor.
+# ============================================================
+
+DT$sez2 <- DT$sez^2
+
+# ============================================================
+# Center all control variables at their sample means
+#
+# Same centering as Protocol_CHE_PET.R. With centered controls, the
+# intercept in each model directly gives the "Effect beyond
+# bias": the PEESE-corrected mean effect when sez = 0 and
+# all controls are at their sample means.
 # ============================================================
 
 DT <- DT %>%
@@ -99,57 +120,45 @@ fmt_se <- function(se) paste0("(", formatC(se, digits = 3, format = "f"), ")")
 # Extract a named row from coef_test() output
 get_row <- function(ct, coef_name) ct[ct$Coef == coef_name, ]
 
-# Format a 95% confidence interval for the intercept ("Effect
-# beyond bias"), using the Satterthwaite df from coef_test() --
-# the same construction used in Table 4 and Table 7, so every
-# confidence interval in the protocol is built the same way.
-fmt_ci <- function(row) {
-  t_crit <- qt(0.975, df = row$df_Satt)
-  lo <- row$beta - t_crit * row$SE
-  hi <- row$beta + t_crit * row$SE
-  paste0("[", formatC(lo, digits = 3, format = "f"), ", ",
-              formatC(hi, digits = 3, format = "f"), "]")
-}
-
 # ============================================================
-# PANEL A: sez only (no control variables)
+# PANEL A: sez^2 only (no control variables)
 #
-# "Bias"              = coefficient on sez
-# "Effect beyond bias" = intercept (the constant when sez = 0)
+# "Bias"               = coefficient on sez^2
+# "Effect beyond bias" = intercept (predicted effect at sez = 0)
 # ============================================================
 
 # --- REML models ---
 
-pA_FE  <- rma.mv(z ~ 1 + sez,
+pA_FE  <- rma.mv(z ~ 1 + sez2,
                   V = sez^2,
                   data = DT, method = "FE")
 
-pA_RE  <- rma.mv(z ~ 1 + sez,
+pA_RE  <- rma.mv(z ~ 1 + sez2,
                   V = sez^2,
                   random = ~ 1 | obs,
                   data = DT, method = "REML")
 
-pA_CE  <- rma.mv(z ~ 1 + sez,
+pA_CE  <- rma.mv(z ~ 1 + sez2,
                   V = V_mat,
                   random = ~ 1 | newid,
                   data = DT, method = "REML")
 
-pA_HE  <- rma.mv(z ~ 1 + sez,
+pA_HE  <- rma.mv(z ~ 1 + sez2,
                   V = sez^2,
                   random = ~ 1 | newid/obs,
                   data = DT, method = "REML")
 
-pA_CHE <- rma.mv(z ~ 1 + sez,
+pA_CHE <- rma.mv(z ~ 1 + sez2,
                   V = V_mat,
                   random = ~ 1 | newid/obs,
                   data = DT, method = "REML")
 
 # --- ML models for LR tests ---
 
-pA_RE_ML  <- rma.mv(z ~ 1 + sez, V = sez^2, random = ~ 1 | obs,       data = DT, method = "ML")
-pA_CE_ML  <- rma.mv(z ~ 1 + sez, V = V_mat, random = ~ 1 | newid,     data = DT, method = "ML")
-pA_HE_ML  <- rma.mv(z ~ 1 + sez, V = sez^2, random = ~ 1 | newid/obs, data = DT, method = "ML")
-pA_CHE_ML <- rma.mv(z ~ 1 + sez, V = V_mat, random = ~ 1 | newid/obs, data = DT, method = "ML")
+pA_RE_ML  <- rma.mv(z ~ 1 + sez2, V = sez^2, random = ~ 1 | obs,       data = DT, method = "ML")
+pA_CE_ML  <- rma.mv(z ~ 1 + sez2, V = V_mat, random = ~ 1 | newid,     data = DT, method = "ML")
+pA_HE_ML  <- rma.mv(z ~ 1 + sez2, V = sez^2, random = ~ 1 | newid/obs, data = DT, method = "ML")
+pA_CHE_ML <- rma.mv(z ~ 1 + sez2, V = V_mat, random = ~ 1 | newid/obs, data = DT, method = "ML")
 
 # --- CR2 standard errors ---
 
@@ -168,26 +177,24 @@ lrt_pA_CHE <- anova(pA_CE_ML, pA_CHE_ML)  # CHE vs CE
 # --- Assemble Panel A table ---
 
 panel_A <- tibble(
-  Variable = c("Effect beyond bias", "(SE)", "95% CI", "Bias", "(SE)",
+  Variable = c("Effect beyond bias", "(SE)", "Bias (sez^2)", "(SE)",
                "Observations", "Studies", "rho (assumed)",
                "tau", "omega", "LR test"),
 
   # rho does not apply to FE, RE, or HE (no imputed V matrix)
   FE = c(
-    fmt_est(get_row(ct_pA_FE, "intrcpt")$beta,  get_row(ct_pA_FE, "intrcpt")$p_Satt),
+    fmt_est(get_row(ct_pA_FE, "intrcpt")$beta, get_row(ct_pA_FE, "intrcpt")$p_Satt),
     fmt_se( get_row(ct_pA_FE, "intrcpt")$SE),
-    fmt_ci( get_row(ct_pA_FE, "intrcpt")),
-    fmt_est(get_row(ct_pA_FE, "sez")$beta,     get_row(ct_pA_FE, "sez")$p_Satt),
-    fmt_se( get_row(ct_pA_FE, "sez")$SE),
+    fmt_est(get_row(ct_pA_FE, "sez2")$beta,    get_row(ct_pA_FE, "sez2")$p_Satt),
+    fmt_se( get_row(ct_pA_FE, "sez2")$SE),
     n_obs, n_studies, "--", "--", "--", "--"
   ),
 
   RE = c(
-    fmt_est(get_row(ct_pA_RE, "intrcpt")$beta,  get_row(ct_pA_RE, "intrcpt")$p_Satt),
+    fmt_est(get_row(ct_pA_RE, "intrcpt")$beta, get_row(ct_pA_RE, "intrcpt")$p_Satt),
     fmt_se( get_row(ct_pA_RE, "intrcpt")$SE),
-    fmt_ci( get_row(ct_pA_RE, "intrcpt")),
-    fmt_est(get_row(ct_pA_RE, "sez")$beta,     get_row(ct_pA_RE, "sez")$p_Satt),
-    fmt_se( get_row(ct_pA_RE, "sez")$SE),
+    fmt_est(get_row(ct_pA_RE, "sez2")$beta,    get_row(ct_pA_RE, "sez2")$p_Satt),
+    fmt_se( get_row(ct_pA_RE, "sez2")$SE),
     n_obs, n_studies, "--",
     fmt_vc(pA_RE$sigma2), "--",
     fmt_p(lrt_pA_RE$pval)
@@ -196,33 +203,30 @@ panel_A <- tibble(
   # CE and CHE use the imputed V matrix, so rho is fixed at the
   # value assumed above, not estimated.
   CE = c(
-    fmt_est(get_row(ct_pA_CE, "intrcpt")$beta,  get_row(ct_pA_CE, "intrcpt")$p_Satt),
+    fmt_est(get_row(ct_pA_CE, "intrcpt")$beta, get_row(ct_pA_CE, "intrcpt")$p_Satt),
     fmt_se( get_row(ct_pA_CE, "intrcpt")$SE),
-    fmt_ci( get_row(ct_pA_CE, "intrcpt")),
-    fmt_est(get_row(ct_pA_CE, "sez")$beta,     get_row(ct_pA_CE, "sez")$p_Satt),
-    fmt_se( get_row(ct_pA_CE, "sez")$SE),
+    fmt_est(get_row(ct_pA_CE, "sez2")$beta,    get_row(ct_pA_CE, "sez2")$p_Satt),
+    fmt_se( get_row(ct_pA_CE, "sez2")$SE),
     n_obs, n_studies,
     formatC(rho, digits = 3, format = "f"),
     fmt_vc(pA_CE$sigma2), "--", "--"
   ),
 
   HE = c(
-    fmt_est(get_row(ct_pA_HE, "intrcpt")$beta,  get_row(ct_pA_HE, "intrcpt")$p_Satt),
+    fmt_est(get_row(ct_pA_HE, "intrcpt")$beta, get_row(ct_pA_HE, "intrcpt")$p_Satt),
     fmt_se( get_row(ct_pA_HE, "intrcpt")$SE),
-    fmt_ci( get_row(ct_pA_HE, "intrcpt")),
-    fmt_est(get_row(ct_pA_HE, "sez")$beta,     get_row(ct_pA_HE, "sez")$p_Satt),
-    fmt_se( get_row(ct_pA_HE, "sez")$SE),
+    fmt_est(get_row(ct_pA_HE, "sez2")$beta,    get_row(ct_pA_HE, "sez2")$p_Satt),
+    fmt_se( get_row(ct_pA_HE, "sez2")$SE),
     n_obs, n_studies, "--",
     fmt_vc(pA_HE$sigma2[1]), fmt_vc(pA_HE$sigma2[2]),
     fmt_p(lrt_pA_HE$pval)
   ),
 
   CHE = c(
-    fmt_est(get_row(ct_pA_CHE, "intrcpt")$beta,  get_row(ct_pA_CHE, "intrcpt")$p_Satt),
+    fmt_est(get_row(ct_pA_CHE, "intrcpt")$beta, get_row(ct_pA_CHE, "intrcpt")$p_Satt),
     fmt_se( get_row(ct_pA_CHE, "intrcpt")$SE),
-    fmt_ci( get_row(ct_pA_CHE, "intrcpt")),
-    fmt_est(get_row(ct_pA_CHE, "sez")$beta,     get_row(ct_pA_CHE, "sez")$p_Satt),
-    fmt_se( get_row(ct_pA_CHE, "sez")$SE),
+    fmt_est(get_row(ct_pA_CHE, "sez2")$beta,    get_row(ct_pA_CHE, "sez2")$p_Satt),
+    fmt_se( get_row(ct_pA_CHE, "sez2")$SE),
     n_obs, n_studies,
     formatC(rho, digits = 3, format = "f"),
     fmt_vc(pA_CHE$sigma2[1]), fmt_vc(pA_CHE$sigma2[2]),
@@ -231,14 +235,13 @@ panel_A <- tibble(
 )
 
 # ============================================================
-# PANEL B: sez + full set of centered control variables
+# PANEL B: sez^2 + full set of centered control variables
 #
-# Because controls are centered, the intercept is again the
-# "Effect beyond bias": estimated mean effect when sez = 0
-# and all controls equal their sample means.
+# The intercept gives the PEESE-corrected "Effect beyond bias"
+# at average study characteristics (all centered controls = 0).
 # ============================================================
 
-formula_B <- z ~ 1 + sez +
+formula_B <- z ~ 1 + sez2 +
   SC1_Cognitive_c + SC1_Structural_c + DV_GrowthRate_c +
   PubYear_c + Published_c + LaggedDV_c + LaggedSC_c + NumberSCVars_c +
   Endog_IV_c + Endog_FE_c + CityLevel_c + RegionLevel_c + CountryLevel_c +
@@ -292,58 +295,53 @@ lrt_pB_CHE <- anova(pB_CE_ML, pB_CHE_ML)  # CHE vs CE
 # --- Assemble Panel B table ---
 
 panel_B <- tibble(
-  Variable = c("Effect beyond bias", "(SE)", "95% CI", "Bias", "(SE)",
+  Variable = c("Effect beyond bias", "(SE)", "Bias (sez^2)", "(SE)",
                "Observations", "Studies", "rho (assumed)",
                "tau", "omega", "LR test"),
 
   FE = c(
-    fmt_est(get_row(ct_pB_FE, "intrcpt")$beta,  get_row(ct_pB_FE, "intrcpt")$p_Satt),
+    fmt_est(get_row(ct_pB_FE, "intrcpt")$beta, get_row(ct_pB_FE, "intrcpt")$p_Satt),
     fmt_se( get_row(ct_pB_FE, "intrcpt")$SE),
-    fmt_ci( get_row(ct_pB_FE, "intrcpt")),
-    fmt_est(get_row(ct_pB_FE, "sez")$beta,     get_row(ct_pB_FE, "sez")$p_Satt),
-    fmt_se( get_row(ct_pB_FE, "sez")$SE),
+    fmt_est(get_row(ct_pB_FE, "sez2")$beta,    get_row(ct_pB_FE, "sez2")$p_Satt),
+    fmt_se( get_row(ct_pB_FE, "sez2")$SE),
     n_obs, n_studies, "--", "--", "--", "--"
   ),
 
   RE = c(
-    fmt_est(get_row(ct_pB_RE, "intrcpt")$beta,  get_row(ct_pB_RE, "intrcpt")$p_Satt),
+    fmt_est(get_row(ct_pB_RE, "intrcpt")$beta, get_row(ct_pB_RE, "intrcpt")$p_Satt),
     fmt_se( get_row(ct_pB_RE, "intrcpt")$SE),
-    fmt_ci( get_row(ct_pB_RE, "intrcpt")),
-    fmt_est(get_row(ct_pB_RE, "sez")$beta,     get_row(ct_pB_RE, "sez")$p_Satt),
-    fmt_se( get_row(ct_pB_RE, "sez")$SE),
+    fmt_est(get_row(ct_pB_RE, "sez2")$beta,    get_row(ct_pB_RE, "sez2")$p_Satt),
+    fmt_se( get_row(ct_pB_RE, "sez2")$SE),
     n_obs, n_studies, "--",
     fmt_vc(pB_RE$sigma2), "--",
     fmt_p(lrt_pB_RE$pval)
   ),
 
   CE = c(
-    fmt_est(get_row(ct_pB_CE, "intrcpt")$beta,  get_row(ct_pB_CE, "intrcpt")$p_Satt),
+    fmt_est(get_row(ct_pB_CE, "intrcpt")$beta, get_row(ct_pB_CE, "intrcpt")$p_Satt),
     fmt_se( get_row(ct_pB_CE, "intrcpt")$SE),
-    fmt_ci( get_row(ct_pB_CE, "intrcpt")),
-    fmt_est(get_row(ct_pB_CE, "sez")$beta,     get_row(ct_pB_CE, "sez")$p_Satt),
-    fmt_se( get_row(ct_pB_CE, "sez")$SE),
+    fmt_est(get_row(ct_pB_CE, "sez2")$beta,    get_row(ct_pB_CE, "sez2")$p_Satt),
+    fmt_se( get_row(ct_pB_CE, "sez2")$SE),
     n_obs, n_studies,
     formatC(rho, digits = 3, format = "f"),
     fmt_vc(pB_CE$sigma2), "--", "--"
   ),
 
   HE = c(
-    fmt_est(get_row(ct_pB_HE, "intrcpt")$beta,  get_row(ct_pB_HE, "intrcpt")$p_Satt),
+    fmt_est(get_row(ct_pB_HE, "intrcpt")$beta, get_row(ct_pB_HE, "intrcpt")$p_Satt),
     fmt_se( get_row(ct_pB_HE, "intrcpt")$SE),
-    fmt_ci( get_row(ct_pB_HE, "intrcpt")),
-    fmt_est(get_row(ct_pB_HE, "sez")$beta,     get_row(ct_pB_HE, "sez")$p_Satt),
-    fmt_se( get_row(ct_pB_HE, "sez")$SE),
+    fmt_est(get_row(ct_pB_HE, "sez2")$beta,    get_row(ct_pB_HE, "sez2")$p_Satt),
+    fmt_se( get_row(ct_pB_HE, "sez2")$SE),
     n_obs, n_studies, "--",
     fmt_vc(pB_HE$sigma2[1]), fmt_vc(pB_HE$sigma2[2]),
     fmt_p(lrt_pB_HE$pval)
   ),
 
   CHE = c(
-    fmt_est(get_row(ct_pB_CHE, "intrcpt")$beta,  get_row(ct_pB_CHE, "intrcpt")$p_Satt),
+    fmt_est(get_row(ct_pB_CHE, "intrcpt")$beta, get_row(ct_pB_CHE, "intrcpt")$p_Satt),
     fmt_se( get_row(ct_pB_CHE, "intrcpt")$SE),
-    fmt_ci( get_row(ct_pB_CHE, "intrcpt")),
-    fmt_est(get_row(ct_pB_CHE, "sez")$beta,     get_row(ct_pB_CHE, "sez")$p_Satt),
-    fmt_se( get_row(ct_pB_CHE, "sez")$SE),
+    fmt_est(get_row(ct_pB_CHE, "sez2")$beta,    get_row(ct_pB_CHE, "sez2")$p_Satt),
+    fmt_se( get_row(ct_pB_CHE, "sez2")$SE),
     n_obs, n_studies,
     formatC(rho, digits = 3, format = "f"),
     fmt_vc(pB_CHE$sigma2[1]), fmt_vc(pB_CHE$sigma2[2]),
@@ -355,15 +353,21 @@ panel_B <- tibble(
 # Export both panels to Excel (one sheet each)
 # ============================================================
 
+# Reorder columns so that the random-effects sequence (FE -> RE -> HE)
+# comes first, followed by the two models with correlated sampling
+# errors (CE -> CHE). Each step in FE -> RE -> HE and CE -> CHE is nested.
+panel_A <- panel_A |> select(Variable, FE, RE, HE, CE, CHE)
+panel_B <- panel_B |> select(Variable, FE, RE, HE, CE, CHE)
+
 write_xlsx(
   list(
     "Panel A - No controls"   = panel_A,
     "Panel B - Full controls" = panel_B
   ),
-  here("Table5_Protocol.xlsx")
+  here("Table_CHE_PEESE.xlsx")
 )
 
-cat("Done. Output saved to Table5_Protocol.xlsx\n")
+cat("Done. Output saved to Table_CHE_PEESE.xlsx\n")
 
 # ── Run time ──────────────────────────────────────────────────────────────────────────────
 elapsed <- proc.time() - start_time

@@ -157,7 +157,7 @@ ct_CHE <- coef_test(model_CHE, cluster = DT$newid, vcov = "CR2")
 # block-diagonal), so no LR test is possible. The choice
 # between HE and CHE is a choice about the assumed within-study
 # correlation (rho), made on substantive grounds rather than by
-# likelihood comparison (see Section 4 of the protocol).
+# likelihood comparison (see Section 4.3 of the protocol).
 # ============================================================
 
 lrt_RE  <- anova(model_FE,    model_RE_ML)   # RE vs FE
@@ -201,7 +201,7 @@ fmt_se <- function(ct) {
 
 # Format a 95% confidence interval, using the Satterthwaite df
 # from coef_test() -- the same construction used for the
-# best-practice intervals in Table 7, so that every confidence
+# best-practice intervals in Section 7.1, so that every confidence
 # interval in the protocol is built the same way.
 fmt_ci <- function(ct) {
   t_crit <- qt(0.975, df = ct$df_Satt)
@@ -304,9 +304,14 @@ table_out <- tibble(
 # Export to Excel
 # ============================================================
 
-write_xlsx(table_out, here("Table4_Protocol.xlsx"))
+# Reorder columns so that the random-effects sequence (FE -> RE -> HE)
+# comes first, followed by the two models with correlated sampling
+# errors (CE -> CHE). Each step in FE -> RE -> HE and CE -> CHE is nested.
+table_out <- table_out |> select(Variable, FE, RE, HE, CE, CHE)
 
-cat("Done. Output saved to Table4_Protocol.xlsx\n")
+write_xlsx(table_out, here("Table_FiveEstimators.xlsx"))
+
+cat("Done. Output saved to Table_FiveEstimators.xlsx\n")
 
 # ── Run time ──────────────────────────────────────────────────────────────────────────────
 elapsed <- proc.time() - start_time

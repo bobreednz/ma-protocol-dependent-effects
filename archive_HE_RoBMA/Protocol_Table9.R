@@ -8,10 +8,11 @@ start_time <- proc.time()
 # ---- LOAD DATA ----
 dat <- readRDS(here("SCData_processed.rds"))
 
-# Compute Fisher's z and its standard error from the raw partial correlations.
-# z = atanh(pcc); sez = sqrt(1 / (df - 1)), the SE of Fisher's z for a PCC.
+# Fisher's z from the partial correlations (identical to the z column already
+# in the data). sez is the reported standard error already in the data, the
+# same definition used by every other script in the protocol; it is not
+# recomputed from df.
 dat$z   <- atanh(dat$pcc)
-dat$sez <- sqrt(1 / (dat$df - 1))
 
 cat(sprintf("Dataset: %d observations from %d studies.\n",
             nrow(dat), length(unique(dat$newid))))

@@ -57,8 +57,8 @@ table2 <- tibble(
                      as.character(nrow(DT)))
 )
 
-write_xlsx(table2, here("Table2_Protocol.xlsx"))
-cat("Table 2 saved to Table2_Protocol.xlsx\n")
+write_xlsx(table2, here("Table_EffectSizes.xlsx"))
+cat("Table 2 saved to Table_EffectSizes.xlsx\n")
 
 # ============================================================
 # FIGURE 1: Distribution of Fisher's z values
@@ -165,10 +165,10 @@ fig1 <- fig1 +
 # width = 6, height = 4 inches at 300 dpi gives a figure
 # suitable for most journal and document formats.
 
-ggsave(here("Figure1_Protocol.png"), fig1,
+ggsave(here("Figure_EffectSizes.png"), fig1,
        width = 6, height = 4, dpi = 300)
 
-cat("Figure 1 saved to Figure1_Protocol.png\n")
+cat("Figure 1 saved to Figure_EffectSizes.png\n")
 
 # ── Run time ──────────────────────────────────────────────────────────────────────────────
 elapsed <- proc.time() - start_time

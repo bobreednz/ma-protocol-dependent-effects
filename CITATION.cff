@@ -1,0 +1,47 @@
+# This CITATION.cff file was generated to enable proper citation of this
+# repository, and to drive the author metadata on the Zenodo DOI record
+# once the Zenodo-GitHub integration is enabled and a release is cut.
+
+cff-version: 1.2.0
+message: "If you use this protocol, please cite it using the metadata below."
+type: software
+title: "A Protocol for Meta-Analysis with Dependent Effect Sizes"
+abstract: >-
+  A step-by-step protocol, written in R, for conducting a meta-analysis
+  when effect size estimates are statistically dependent (multiple
+  estimates per study). The protocol covers data cleaning, preliminary
+  analysis, the choice of the within-study correlation (rho), and five
+  meta-analytic estimators (FE, RE, HE, CE, and the preferred CHE model).
+  It then applies three corrections for publication bias (PET-PEESE,
+  step-function selection models, and robust Bayesian meta-analysis,
+  RoBMA), uses the z-plot and estimated selection weights to choose the
+  primary correction, and estimates the meta-regression and best-practice
+  predictions for all three corrections, ending with a sensitivity
+  summary. It is illustrated throughout with a meta-analysis of social
+  capital and economic growth (Xue, Reed, and van Aert, 2025), but every
+  step applies to any meta-analytic database with dependent effect sizes.
+authors:
+  - family-names: "Reed"
+    given-names: "W. Robert"
+    affiliation: "Department of Economics and Finance & UCMeta, University of Canterbury"
+    email: "bob.reed@canterbury.ac.nz"
+  - family-names: "Tipton"
+    given-names: "Elizabeth"
+    affiliation: "School of Education and Social Policy, Northwestern University"
+  - family-names: "Bartoš"
+    given-names: "František"
+    affiliation: "Faculty of Social and Behavioural Sciences, University of Amsterdam; Institute of Economic Studies, Faculty of Social Sciences, Charles University, Prague"
+keywords:
+  - meta-analysis
+  - dependent effect sizes
+  - publication bias
+  - PET-PEESE
+  - selection models
+  - robust Bayesian meta-analysis
+  - robust variance estimation
+  - reproducibility
+  - R
+license: CC-BY-4.0
+repository-code: "https://github.com/bobreednz/ma-protocol-dependent-effects"
+url: "https://bobreednz.github.io/ma-protocol-dependent-effects/"
+date-released: "2026-10-18"

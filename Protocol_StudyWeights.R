@@ -295,8 +295,8 @@ addStyle(wb, "Table3", style = wrap_style,
          rows = 2:(nrow(table3) + 1), cols = 1:4,
          gridExpand = TRUE)
 
-saveWorkbook(wb, here("Table3_Protocol.xlsx"), overwrite = TRUE)
-cat("Table 3 saved to Table3_Protocol.xlsx\n")
+saveWorkbook(wb, here("Table_StudyWeights.xlsx"), overwrite = TRUE)
+cat("Table 3 saved to Table_StudyWeights.xlsx\n")
 
 # ── Run time ──────────────────────────────────────────────────────────────────
 elapsed <- proc.time() - start_time

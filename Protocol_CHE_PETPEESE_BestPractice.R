@@ -137,7 +137,7 @@ DT_bp2 <- center_at_bp(DT, Reg_OECDEurope_bp = 1)   # BP#2: OECD/Europe
 # ============================================================
 # Model formula
 #
-# Same 19 regressors as the CHE model in Table 6 (Panel A) and Table 10, but now
+# Same 19 regressors as the CHE-PET meta-regression in Section 7.1, but now
 # using the centered variables. Because sez_c = sez (best
 # practice sez = 0), and centering does not change sampling
 # variances, V = sez^2 still holds.
@@ -175,13 +175,11 @@ fmt_interval <- function(lo, hi) {
 # return a formatted table
 #
 # Only CHE is fit here. CHE was established as the preferred
-# estimator in the Section 5 Decision Point and as the sole
-# inferential model for the meta-regression in Table 6 ("BMA
-# informs interpretation; CHE determines estimation and
-# inference"). Table 7 applies that same chosen model to the
-# best-practice covariate values, so there is no remaining
-# role for FE/RE/CE/HE here -- unlike Table 4, this is not an
-# estimator-comparison step.
+# estimator in the Section 4 Decision Point and is the model
+# used for the CHE-PET meta-regression in Section 7.1. This
+# script applies that same model to the best-practice covariate
+# values; unlike Table 4, this is not an estimator-comparison
+# step.
 #
 # The returned table has rows for scale (Fisher's z, PCC) and
 # columns for Mean Prediction, 95% CI, and 95% PI -- a two-row
@@ -199,10 +197,11 @@ fmt_interval <- function(lo, hi) {
 #      Satterthwaite df from coef_test()
 #   5. Compute 95% prediction interval (PI) by adding the
 #      model's variance components to the CI standard error.
-#      The PI answers: what range of effects would we expect
-#      from a new best-practice study? It is wider than the
-#      CI because it includes residual between-study
-#      heterogeneity (tau^2 and omega^2).
+#      The PI answers: within what range is the TRUE effect
+#      underlying a new best-practice estimate expected to fall?
+#      It is wider than the CI because it includes residual
+#      heterogeneity (tau^2 and omega^2). It does not include
+#      the sampling error of a new estimate.
 #   6. Convert the Fisher's z estimate and both intervals to PCC
 #      via tanh(); tanh() is monotonic, so applying it directly
 #      to the z-scale interval endpoints gives the correct PCC
@@ -294,7 +293,7 @@ build_bp_panel <- function(DT_bp) {
 # Build tables for both best practice scenarios
 #
 # BP#1 (non-OECD/Europe) is listed first throughout the protocol
-# (Table 7 and its RoBMA counterpart, Table 11), so that order is
+# (this table and its RoBMA counterpart in Section 7.3), so that order is
 # preserved here.
 # ============================================================
 
@@ -319,14 +318,14 @@ panel_bp2 <- build_bp_panel(DT_bp2)
 
 bp_note <- function(Reg_OECDEurope_bp) {
   paste0(
-    "\"Best Practice\" predictions are derived from the CHE estimates in Table 6, Panel A. ",
+    "\"Best Practice\" predictions are derived from the CHE-PET meta-regression with 18 moderators (Section 7.1). ",
     "Predictions are evaluated at se(z) = 0, SC1_Cognitive = 1, SC1_Structural = 0, ",
     "SC1_Other = 0 (reference), DV_GrowthRate = 1, DV_GDPLevel = 0 (reference), PubYear = ",
     round(bp_PubYear, 1), " (sample mean), Published = 1, LaggedDV = 0, LaggedSC = 0, NumberSCVars = ",
     bp_NumberSCVars, ", Endog_IV = 1, Endog_FE = 1, CityLevel = 0, RegionLevel = 0, CountryLevel = 1, ",
     "PanelData = 1, Reg_OECDEurope = ", Reg_OECDEurope_bp, ", Reg_US = 0, Reg_Africa = 0, Reg_Asia = 0. ",
     "The covariance matrix used to fit this model assumes a within-study correlation of rho = ",
-    formatC(rho, digits = 3, format = "f"), " (Section 4)."
+    formatC(rho, digits = 3, format = "f"), " (Section 4.3)."
   )
 }
 
@@ -351,10 +350,10 @@ write_xlsx(
     "BP2 - OECD Europe"     = panel_bp2,
     "Notes"                 = notes_sheet
   ),
-  here("Table7_Protocol.xlsx")
+  here("Table_CHE_PETPEESE_BestPractice.xlsx")
 )
 
-cat("Done. Output saved to Table7_Protocol.xlsx\n")
+cat("Done. Output saved to Table_CHE_PETPEESE_BestPractice.xlsx\n")
 
 # -- Run time ------------------------------------------------------------------
 elapsed <- proc.time() - start_time
