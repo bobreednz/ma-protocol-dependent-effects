@@ -173,7 +173,7 @@ display <- data.frame(
   Parameter = c("Corrected mean", "95% CI (bootstrap)",
                 "lambda1", "95% CI (bootstrap)",
                 "lambda2", "95% CI (bootstrap)",
-                "tau", "Observations", "Studies"),
+                "tau (total)", "Observations", "Studies"),
   `3PSM` = s3$display,
   `4PSM` = s4$display,
   check.names = FALSE, stringsAsFactors = FALSE

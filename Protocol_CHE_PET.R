@@ -170,7 +170,7 @@ lrt_pA_CHE <- anova(pA_CE_ML, pA_CHE_ML)  # CHE vs CE
 panel_A <- tibble(
   Variable = c("Effect beyond bias", "(SE)", "95% CI", "Bias", "(SE)",
                "Observations", "Studies", "rho (assumed)",
-               "tau", "omega", "LR test"),
+               "tau (study)", "tau (estimate)", "tau (total)", "LR test"),
 
   # rho does not apply to FE, RE, or HE (no imputed V matrix)
   FE = c(
@@ -179,7 +179,7 @@ panel_A <- tibble(
     fmt_ci( get_row(ct_pA_FE, "intrcpt")),
     fmt_est(get_row(ct_pA_FE, "sez")$beta,     get_row(ct_pA_FE, "sez")$p_Satt),
     fmt_se( get_row(ct_pA_FE, "sez")$SE),
-    n_obs, n_studies, "--", "--", "--", "--"
+    n_obs, n_studies, "--", "--", "--", "--", "--"
   ),
 
   RE = c(
@@ -189,7 +189,7 @@ panel_A <- tibble(
     fmt_est(get_row(ct_pA_RE, "sez")$beta,     get_row(ct_pA_RE, "sez")$p_Satt),
     fmt_se( get_row(ct_pA_RE, "sez")$SE),
     n_obs, n_studies, "--",
-    fmt_vc(pA_RE$sigma2), "--",
+    "--", "--", fmt_vc(pA_RE$sigma2),
     fmt_p(lrt_pA_RE$pval)
   ),
 
@@ -203,7 +203,7 @@ panel_A <- tibble(
     fmt_se( get_row(ct_pA_CE, "sez")$SE),
     n_obs, n_studies,
     formatC(rho, digits = 3, format = "f"),
-    fmt_vc(pA_CE$sigma2), "--", "--"
+    fmt_vc(pA_CE$sigma2), "--", fmt_vc(pA_CE$sigma2), "--"
   ),
 
   HE = c(
@@ -213,7 +213,7 @@ panel_A <- tibble(
     fmt_est(get_row(ct_pA_HE, "sez")$beta,     get_row(ct_pA_HE, "sez")$p_Satt),
     fmt_se( get_row(ct_pA_HE, "sez")$SE),
     n_obs, n_studies, "--",
-    fmt_vc(pA_HE$sigma2[1]), fmt_vc(pA_HE$sigma2[2]),
+    fmt_vc(pA_HE$sigma2[1]), fmt_vc(pA_HE$sigma2[2]), fmt_vc(sum(pA_HE$sigma2)),
     fmt_p(lrt_pA_HE$pval)
   ),
 
@@ -225,7 +225,7 @@ panel_A <- tibble(
     fmt_se( get_row(ct_pA_CHE, "sez")$SE),
     n_obs, n_studies,
     formatC(rho, digits = 3, format = "f"),
-    fmt_vc(pA_CHE$sigma2[1]), fmt_vc(pA_CHE$sigma2[2]),
+    fmt_vc(pA_CHE$sigma2[1]), fmt_vc(pA_CHE$sigma2[2]), fmt_vc(sum(pA_CHE$sigma2)),
     fmt_p(lrt_pA_CHE$pval)
   )
 )
@@ -294,7 +294,7 @@ lrt_pB_CHE <- anova(pB_CE_ML, pB_CHE_ML)  # CHE vs CE
 panel_B <- tibble(
   Variable = c("Effect beyond bias", "(SE)", "95% CI", "Bias", "(SE)",
                "Observations", "Studies", "rho (assumed)",
-               "tau", "omega", "LR test"),
+               "tau (study)", "tau (estimate)", "tau (total)", "LR test"),
 
   FE = c(
     fmt_est(get_row(ct_pB_FE, "intrcpt")$beta,  get_row(ct_pB_FE, "intrcpt")$p_Satt),
@@ -302,7 +302,7 @@ panel_B <- tibble(
     fmt_ci( get_row(ct_pB_FE, "intrcpt")),
     fmt_est(get_row(ct_pB_FE, "sez")$beta,     get_row(ct_pB_FE, "sez")$p_Satt),
     fmt_se( get_row(ct_pB_FE, "sez")$SE),
-    n_obs, n_studies, "--", "--", "--", "--"
+    n_obs, n_studies, "--", "--", "--", "--", "--"
   ),
 
   RE = c(
@@ -312,7 +312,7 @@ panel_B <- tibble(
     fmt_est(get_row(ct_pB_RE, "sez")$beta,     get_row(ct_pB_RE, "sez")$p_Satt),
     fmt_se( get_row(ct_pB_RE, "sez")$SE),
     n_obs, n_studies, "--",
-    fmt_vc(pB_RE$sigma2), "--",
+    "--", "--", fmt_vc(pB_RE$sigma2),
     fmt_p(lrt_pB_RE$pval)
   ),
 
@@ -324,7 +324,7 @@ panel_B <- tibble(
     fmt_se( get_row(ct_pB_CE, "sez")$SE),
     n_obs, n_studies,
     formatC(rho, digits = 3, format = "f"),
-    fmt_vc(pB_CE$sigma2), "--", "--"
+    fmt_vc(pB_CE$sigma2), "--", fmt_vc(pB_CE$sigma2), "--"
   ),
 
   HE = c(
@@ -334,7 +334,7 @@ panel_B <- tibble(
     fmt_est(get_row(ct_pB_HE, "sez")$beta,     get_row(ct_pB_HE, "sez")$p_Satt),
     fmt_se( get_row(ct_pB_HE, "sez")$SE),
     n_obs, n_studies, "--",
-    fmt_vc(pB_HE$sigma2[1]), fmt_vc(pB_HE$sigma2[2]),
+    fmt_vc(pB_HE$sigma2[1]), fmt_vc(pB_HE$sigma2[2]), fmt_vc(sum(pB_HE$sigma2)),
     fmt_p(lrt_pB_HE$pval)
   ),
 
@@ -346,7 +346,7 @@ panel_B <- tibble(
     fmt_se( get_row(ct_pB_CHE, "sez")$SE),
     n_obs, n_studies,
     formatC(rho, digits = 3, format = "f"),
-    fmt_vc(pB_CHE$sigma2[1]), fmt_vc(pB_CHE$sigma2[2]),
+    fmt_vc(pB_CHE$sigma2[1]), fmt_vc(pB_CHE$sigma2[2]), fmt_vc(sum(pB_CHE$sigma2)),
     fmt_p(lrt_pB_CHE$pval)
   )
 )

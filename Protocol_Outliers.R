@@ -281,8 +281,11 @@ cat(sprintf("Largest downward shift: %.4f (study %d)\n",
     n_obs     = jk_saved$`N (obs)`,
     intercept = jk_saved$`LOO intercept`,
     se        = jk_saved$`LOO SE`,
-    tau       = jk_saved$`LOO tau`,
-    omega     = jk_saved$`LOO omega`,
+    # Files saved before October 2026 use the old column names
+    # "LOO tau" and "LOO omega"; newer files use "LOO tau (study)" and
+    # "LOO tau (estimate)". Read whichever is present.
+    tau       = if ("LOO tau (study)" %in% names(jk_saved)) jk_saved$`LOO tau (study)` else jk_saved$`LOO tau`,
+    omega     = if ("LOO tau (estimate)" %in% names(jk_saved)) jk_saved$`LOO tau (estimate)` else jk_saved$`LOO omega`,
     change    = jk_saved$`Change`
   )
   intercept_full <- jk_saved$`Full intercept`[1]
@@ -387,8 +390,8 @@ jk_table <- jk %>%
     `LOO intercept`    = round(intercept, 4),
     `LOO SE`           = round(se, 4),
     `Change`           = round(change, 4),
-    `LOO tau`          = round(tau, 4),
-    `LOO omega`        = round(omega, 4)
+    `LOO tau (study)`    = round(tau, 4),
+    `LOO tau (estimate)` = round(omega, 4)
   )
 
 # The table is written only after a refit; with refit <- FALSE it already

@@ -18,14 +18,11 @@
 # errors (V, built by vcalc() with rho = 0.5) plus study-level and
 # estimate-level random effects (random = ~ 1 | newid/obs).
 #
-# SOFTWARE: RoBMA.mv() and BMA.mv() require RoBMA 4.1, which at the time of
-# writing is a development version (the CRAN release is 4.0.0). Install it,
-# then restart R:
-#   remotes::install_github("FBartos/BayesTools@0.3.1-add-random")
-#   remotes::install_github("FBartos/RoBMA@dev-4-1-0")
+# SOFTWARE: RoBMA.mv() and BMA.mv() require RoBMA 4.1.1 or later, available
+# from CRAN. Protocol_Install.R installs it; restart R afterwards.
 # RoBMA also needs JAGS (see Software Setup in the Introduction).
 #
-# SAVED FITS: fitting takes about 4.5 hours for RoBMA.mv and a few minutes for
+# SAVED FITS: fitting takes about 3.5 hours for RoBMA.mv and a few minutes for
 # BMA.mv. By default the script loads the saved fits. Set refit <- TRUE to
 # re-estimate them (the fits are then saved again).
 #
@@ -40,17 +37,17 @@
 
 start_time <- proc.time()   # record start time so run time can be reported
 
-refit <- FALSE              # TRUE re-estimates both models (about 4.5 hours)
+refit <- FALSE             # TRUE re-estimates both models (about 3.5 hours)
 
 # ---- Packages ----------------------------------------------------------------
 library(here)      # resolves file paths relative to the project root (.Rproj)
 library(metafor)   # vcalc() for the sampling covariance matrix
-library(RoBMA)     # RoBMA.mv() and BMA.mv(); must be version 4.1 or later
+library(RoBMA)     # RoBMA.mv() and BMA.mv(); must be version 4.1.1 or later
 library(writexl)   # write_xlsx()
 
-# The CHE models need RoBMA 4.1 or later: RoBMA.mv() is not in the CRAN version (4.0.0).
-if (packageVersion("RoBMA") < "4.1") {
-  stop("This script needs the development version of RoBMA (4.1 or later). ",
+# The CHE models need RoBMA 4.1.1 or later, the first version with RoBMA.mv().
+if (packageVersion("RoBMA") < "4.1.1") {
+  stop("This script needs RoBMA 4.1.1 or later. ",
        "Run Protocol_Install.R, or see Section 5.4 of the protocol.")
 }
 
@@ -74,7 +71,7 @@ if (refit || !file.exists(rob_file) || !file.exists(bma_file)) {
   # second draw, which raises the effective sample size of the mean.
   mcmc <- list(sample = 10000, burnin = 10000, adapt = 10000, thin = 2)
 
-  cat("Fitting intercept-only CHE RoBMA (about 4.5 hours)...\n")
+  cat("Fitting intercept-only CHE RoBMA (about 3.5 hours)...\n")
   t1 <- system.time({
     fit_rob <- RoBMA.mv(
       yi = yi, V = V_mat, measure = "ZCOR",   # input is Fisher's z

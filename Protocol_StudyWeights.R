@@ -139,11 +139,11 @@ tau_RE   <- sqrt(tau2_est)   # between-study SD
 i2_est   <- model_RE$I2
 
 # ============================================================
-# I-squared, tau, and omega for HE
+# I-squared, tau (study), and tau (estimate) for HE
 #
 # Notation follows the multilevel meta-analysis literature:
-#   tau   = sqrt(sigma2[1]) = between-study SD
-#   omega = sqrt(sigma2[2]) = within-study SD (between-estimate)
+#   tau (study)    = sqrt(sigma2[1]) = between-study SD
+#   tau (estimate) = sqrt(sigma2[2]) = within-study SD (between-estimate)
 #
 # I-squared components use the harmonic mean of the sampling
 # variances (Cheung, 2014; Konstantopoulos, 2011).
@@ -205,10 +205,12 @@ cat(sprintf("Top 10 studies by FE weight (id): %s\n",
 # ============================================================
 
 table3 <- tibble(
-  # tau = between-study SD; omega = within-study SD (HE only)
+  # tau (study) = between-study SD; tau (estimate) = within-study SD
+  # (HE only). I-squared comes last: it depends on the precision of the
+  # estimates, so it is not a measure of how much the true effects vary.
   Statistic = c("Mean", "Median", "5%", "10%", "90%", "95%",
                 "Minimum", "Maximum", "Top 3", "Top 10",
-                "I-squared", "tau", "omega", "Studies"),
+                "tau (study)", "tau (estimate)", "I-squared", "Studies"),
 
   FE = c(
     fmt_pct(mean(study_w$w_FE)),
@@ -221,9 +223,9 @@ table3 <- tibble(
     fmt_pct(max(study_w$w_FE)),
     fmt_pct(top3_FE),
     fmt_pct(top10_FE),
+    "--",   # tau (study)
+    "--",   # tau (estimate)
     "--",   # I-squared
-    "--",   # tau
-    "--",   # omega
     as.character(n_studies)
   ),
 
@@ -238,9 +240,10 @@ table3 <- tibble(
     fmt_pct(max(study_w$w_RE)),
     fmt_pct(top3_RE),
     fmt_pct(top10_RE),
+    # RE is fitted to the 83 study means, so its tau is between studies
+    formatC(tau_RE, digits = 4, format = "f"),   # tau (study), no CI
+    "--",                                        # tau (estimate): RE has no within-study component
     paste0(formatC(i2_est, digits = 1, format = "f"), "%"),
-    formatC(tau_RE, digits = 4, format = "f"),   # tau (no CI)
-    "--",                                        # omega (RE has no within-study component)
     as.character(n_studies)
   ),
 
@@ -255,9 +258,9 @@ table3 <- tibble(
     fmt_pct(max(study_w$w_HE)),
     fmt_pct(top3_HE),
     fmt_pct(top10_HE),
+    formatC(tau_between,  digits = 4, format = "f"),  # tau (study): between-study SD
+    formatC(omega_within, digits = 4, format = "f"),  # tau (estimate): within-study SD
     paste0(formatC(I2_total_HE, digits = 1, format = "f"), "%"),
-    formatC(tau_between,  digits = 4, format = "f"),  # tau  (between-study SD)
-    formatC(omega_within, digits = 4, format = "f"),  # omega (within-study SD)
     as.character(n_studies)
   )
 )

@@ -78,8 +78,8 @@ model_CE <- rma.mv(z ~ 1,
                    method = "REML")
 
 # HE: Hierarchical effects model
-# Two variance components: between-study (tau) and
-# within-study (omega). Effect sizes are treated as
+# Two variance components: between-study (tau (study)) and
+# within-study (tau (estimate)). Effect sizes are treated as
 # independent (diagonal V matrix).
 model_HE <- rma.mv(z ~ 1,
                    V      = sez^2,
@@ -88,7 +88,7 @@ model_HE <- rma.mv(z ~ 1,
                    method = "REML")
 
 # CHE: Correlated hierarchical effects model
-# Two variance components (tau and omega) AND the imputed
+# Two variance components (study and estimate) AND the imputed
 # covariance matrix. Most flexible of the five models.
 model_CHE <- rma.mv(z ~ 1,
                     V      = V_mat,
@@ -211,6 +211,22 @@ fmt_ci <- function(ct) {
               formatC(hi, digits = 3, format = "f"), "]")
 }
 
+# Format a 95% prediction interval. It adds the total heterogeneity
+# variance (the sum of the model's variance components) to the squared
+# CR2 standard error, and uses the same Satterthwaite df as the
+# confidence interval. This is the construction used for the
+# best-practice prediction intervals in Section 7.1. The interval
+# describes the range of true effects; it does not include the
+# sampling error of a new estimate.
+fmt_pi <- function(ct, sigma2_total) {
+  t_crit  <- qt(0.975, df = ct$df_Satt)
+  pred_se <- sqrt(ct$SE^2 + sigma2_total)
+  lo <- ct$beta - t_crit * pred_se
+  hi <- ct$beta + t_crit * pred_se
+  paste0("[", formatC(lo, digits = 3, format = "f"), ", ",
+              formatC(hi, digits = 3, format = "f"), "]")
+}
+
 # ============================================================
 # Extract LR test p-values
 # ============================================================
@@ -224,78 +240,95 @@ p_lrt_CHE <- fmt_p(lrt_CHE$pval)
 # ============================================================
 
 table_out <- tibble(
-  Variable = c("Constant", "(SE)", "95% CI", "Observations", "Studies",
-               "rho (assumed)", "tau", "omega", "LR test"),
+  # Heterogeneity rows: tau (study) is the SD of true effects between
+  # studies, tau (estimate) the SD among estimates within a study, and
+  # tau (total) the square root of the sum of the two variances.
+  Variable = c("Constant", "(SE)", "95% CI", "95% PI", "Observations", "Studies",
+               "rho (assumed)", "tau (study)", "tau (estimate)", "tau (total)",
+               "LR test"),
 
-  # FE: no random effects, so no variance components or LR test;
-  # rho is not used (no imputed V matrix)
+  # FE: no random effects, so no heterogeneity, prediction interval,
+  # or LR test; rho is not used (no imputed V matrix)
   FE = c(
     fmt_est(ct_FE),
     fmt_se(ct_FE),
     fmt_ci(ct_FE),
+    "--",
     n_obs,
     n_studies,
+    "--",
     "--",
     "--",
     "--",
     "--"
   ),
 
-  # RE: one variance component (tau); LR test vs FE;
+  # RE: one random effect per estimate (~ 1 | obs), which ignores which
+  # study an estimate comes from, so its single variance component is
+  # the total heterogeneity across estimates; LR test vs FE;
   # rho is not used (no imputed V matrix)
   RE = c(
     fmt_est(ct_RE),
     fmt_se(ct_RE),
     fmt_ci(ct_RE),
+    fmt_pi(ct_RE, model_RE$sigma2),
     n_obs,
     n_studies,
     "--",
-    fmt_vc(model_RE$sigma2),
     "--",
+    "--",
+    fmt_vc(model_RE$sigma2),
     p_lrt_RE
   ),
 
-  # CE: one between-study variance component (tau) + imputed V;
+  # CE: one random effect per study (~ 1 | newid) + imputed V, so its
+  # single variance component is between studies and is also the total;
   # rho is fixed at the value assumed above, not estimated;
   # no LR test (not nested with RE or HE)
   CE = c(
     fmt_est(ct_CE),
     fmt_se(ct_CE),
     fmt_ci(ct_CE),
+    fmt_pi(ct_CE, model_CE$sigma2),
     n_obs,
     n_studies,
     formatC(rho, digits = 3, format = "f"),
     fmt_vc(model_CE$sigma2),
     "--",
+    fmt_vc(model_CE$sigma2),
     "--"
   ),
 
-  # HE: two variance components (tau, omega); LR test vs RE;
+  # HE: two variance components (study, estimate); LR test vs RE;
   # rho is not used (no imputed V matrix)
   HE = c(
     fmt_est(ct_HE),
     fmt_se(ct_HE),
     fmt_ci(ct_HE),
+    fmt_pi(ct_HE, sum(model_HE$sigma2)),
     n_obs,
     n_studies,
     "--",
     fmt_vc(model_HE$sigma2[1]),
     fmt_vc(model_HE$sigma2[2]),
+    fmt_vc(sum(model_HE$sigma2)),
     p_lrt_HE
   ),
 
-  # CHE: two variance components (tau, omega) + imputed V;
+  # CHE: two variance components (study, estimate) + imputed V;
   # rho is fixed at the value assumed above, not estimated;
   # LR test vs CE
   CHE = c(
     fmt_est(ct_CHE),
     fmt_se(ct_CHE),
     fmt_ci(ct_CHE),
+    fmt_pi(ct_CHE, sum(model_CHE$sigma2)),
     n_obs,
     n_studies,
     formatC(rho, digits = 3, format = "f"),
     fmt_vc(model_CHE$sigma2[1]),
     fmt_vc(model_CHE$sigma2[2]),
+    fmt_vc(sum(model_CHE$sigma2)),
     p_lrt_CHE
   )
 )

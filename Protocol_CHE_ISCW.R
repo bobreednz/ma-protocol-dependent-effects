@@ -102,7 +102,7 @@ column <- function(r) c(
   f3(r$bias), paste0("(", f3(r$bias_se), ")"),
   f3(r$tau), f3(r$omega), nrow(dat), length(unique(dat$newid)))
 row_labels <- c("Mean effect", "(SE)", "95% CI", "Degrees of freedom",
-                "Bias coefficient", "(SE)", "tau", "omega", "Observations", "Studies")
+                "Bias coefficient", "(SE)", "tau (study)", "tau (estimate)", "Observations", "Studies")
 
 display <- data.frame(
   Parameter = row_labels,

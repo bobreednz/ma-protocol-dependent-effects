@@ -14,7 +14,7 @@
 #      model does not reproduce that part of the observed distribution.
 #
 # The script loads the fit saved by Protocol_RoBMA_CHE_Intercept.R; it does
-# not refit the model. zplot() itself is slow: about 25 minutes here.
+# not refit the model. zplot() takes about 5 minutes here.
 #
 # Output: Figure_Zplot_CHE.png
 # =============================================================================
@@ -22,11 +22,11 @@
 start_time <- proc.time()   # record start time so run time can be reported
 
 library(here)    # resolves file paths relative to the project root (.Rproj)
-library(RoBMA)   # zplot(); requires RoBMA 4.1 for RoBMA.mv fits
+library(RoBMA)   # zplot(); requires RoBMA 4.1.1 or later for RoBMA.mv fits
 
-# The CHE models need RoBMA 4.1 or later: RoBMA.mv() is not in the CRAN version (4.0.0).
-if (packageVersion("RoBMA") < "4.1") {
-  stop("This script needs the development version of RoBMA (4.1 or later). ",
+# The CHE models need RoBMA 4.1.1 or later, the first version with RoBMA.mv().
+if (packageVersion("RoBMA") < "4.1.1") {
+  stop("This script needs RoBMA 4.1.1 or later. ",
        "Run Protocol_Install.R, or see Section 5.4 of the protocol.")
 }
 

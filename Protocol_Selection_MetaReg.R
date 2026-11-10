@@ -279,7 +279,7 @@ summary_tbl <- data.frame(
   Parameter = c("Corrected mean", "95% CI (bootstrap)",
                 "lambda1", "95% CI (bootstrap)",
                 "lambda2", "95% CI (bootstrap)",
-                "tau", "Bootstrap replications used",
+                "tau (total)", "Bootstrap replications used",
                 "Observations", "Studies"),
   Value = c(f3(mu["est"]), ci(mu["lo"], mu["hi"]),
             f3(l1["est"]), ci(l1["lo"], l1["hi"]),

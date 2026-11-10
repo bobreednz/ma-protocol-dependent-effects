@@ -59,7 +59,11 @@ png(here("Figure_FunnelPlot.png"),
 
 par(mar = c(4, 4, 2, 1.5))
 
+# cex = 0.75 draws the points 25% smaller than the default, so that the
+# dense cluster of precise estimates near the top of the funnel is easier
+# to see.
 metafor::funnel(model_RE,
+       cex  = 0.75,
        xlab = "Fisher's z",
        ylab = "Standard Error")
 

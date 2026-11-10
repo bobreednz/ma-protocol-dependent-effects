@@ -36,14 +36,34 @@
 #     internally. summary() reports their coefficients in the original units
 #     (per year, per additional variable), which is what the table shows.
 #   - The intercept is NOT reported. In the original units it refers to
-#     PubYear = 0; even with standardized coefficients it is the effect for a
-#     study at the reference level of every binary moderator, which is not a
-#     meaningful profile here. RoBMA's "Effect" Bayes factor refers to this
-#     intercept, so it is not reported either.
+#     PubYear = 0; with standardized coefficients it is the effect for a
+#     study at the reference level of every binary moderator, with the
+#     continuous moderators at their sample means. Here that profile is not
+#     best practice (best practice sets seven binary moderators to 1 and
+#     NumberSCVars to 1, not its mean). RoBMA's "Effect" Bayes factor refers
+#     to this intercept, so it is not reported either. The best-practice
+#     predictions come from predict() below.
+#   - To obtain a Bayes factor for the effect at a particular profile (for
+#     example, best practice), recode the moderators so that the intercept
+#     refers to that profile, then refit. Only one profile can be the
+#     reference in a single fit.
+#       * Binary moderators: relevel each factor so that its reference level
+#         is the profile's value, e.g.
+#           dat$Endog_FE <- relevel(dat$Endog_FE, ref = "1")
+#       * Continuous moderators: turn off RoBMA's internal standardization
+#         (standardize_continuous_predictors = FALSE) and supply each variable centered
+#         at the profile's value and divided by its standard deviation, so
+#         the default priors remain appropriate, e.g.
+#           dat$NumberSCVars_bp <- (dat$NumberSCVars - 1) / sd(dat$NumberSCVars)
+#           dat$PubYear_bp      <- (dat$PubYear - mean(dat$PubYear)) / sd(dat$PubYear)
+#     The intercept and RoBMA's "Effect" Bayes factor then refer to that
+#     profile. The coefficients on the releveled factors change sign, and the
+#     coefficients on the rescaled continuous moderators are per standard
+#     deviation (divide by the standard deviation for per-unit values).
 #
-# SOFTWARE: RoBMA 4.1 (development version; see Section 5.4) and JAGS.
+# SOFTWARE: RoBMA 4.1.1 or later (see Section 5.4) and JAGS.
 #
-# SAVED FITS: refitting takes about 5 hours for RoBMA.mv and about 30 minutes
+# SAVED FITS: refitting takes about 3.5 hours for RoBMA.mv and about 25 minutes
 # for BMA.mv. By default the script loads the saved fits (refit <- FALSE).
 #
 # Outputs:
@@ -64,18 +84,18 @@
 
 start_time <- proc.time()   # record start time so run time can be reported
 
-refit <- FALSE              # TRUE re-estimates both models (about 5.5 hours)
+refit <- FALSE             # TRUE re-estimates both models (about 4 hours)
 
 # ---- Packages ----------------------------------------------------------------
 library(here)       # resolves file paths relative to the project root (.Rproj)
 library(metafor)    # vcalc() for the sampling covariance matrix
-library(RoBMA)      # RoBMA.mv(), BMA.mv(), pooled_effect(); version 4.1 or later
+library(RoBMA)      # RoBMA.mv(), BMA.mv(), pooled_effect(); version 4.1.1 or later
 library(posterior)  # as_draws(), to extract posterior draws
 library(writexl)    # write_xlsx()
 
-# The CHE models need RoBMA 4.1 or later: RoBMA.mv() is not in the CRAN version (4.0.0).
-if (packageVersion("RoBMA") < "4.1") {
-  stop("This script needs the development version of RoBMA (4.1 or later). ",
+# The CHE models need RoBMA 4.1.1 or later, the first version with RoBMA.mv().
+if (packageVersion("RoBMA") < "4.1.1") {
+  stop("This script needs RoBMA 4.1.1 or later. ",
        "Run Protocol_Install.R, or see Section 5.4 of the protocol.")
 }
 
@@ -132,7 +152,7 @@ if (refit || !file.exists(rob_file) || !file.exists(bma_file)) {
   V_mat <- vcalc(vi = sez^2, cluster = newid, obs = obs, rho = 0.5, data = dat)
   mod_formula <- as.formula(paste("~", paste(moderators, collapse = " + ")))
 
-  cat("Fitting the 18-moderator CHE RoBMA (about 5 hours)...\n")
+  cat("Fitting the 18-moderator CHE RoBMA (about 3.5 hours)...\n")
   fit_rob <- RoBMA.mv(
     yi = yi, V = V_mat, measure = "ZCOR",
     mods = mod_formula,
@@ -142,7 +162,7 @@ if (refit || !file.exists(rob_file) || !file.exists(bma_file)) {
     parallel = TRUE, seed = 1, data = dat)
   saveRDS(fit_rob, rob_file)
 
-  cat("Fitting the 18-moderator CHE BMA, no bias component (about 30 minutes)...\n")
+  cat("Fitting the 18-moderator CHE BMA, no bias component (about 25 minutes)...\n")
   fit_bma <- BMA.mv(
     yi = yi, V = V_mat, measure = "ZCOR",
     mods = mod_formula,

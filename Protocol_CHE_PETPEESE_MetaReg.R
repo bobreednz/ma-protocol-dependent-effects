@@ -141,7 +141,7 @@ summary_column <- function(m, bias_name) {
 summary_tbl <- data.frame(
   Parameter = c("Mean effect", "(SE)", "95% CI",
                 "Bias coefficient", "(SE)",
-                "tau", "omega", "Observations", "Studies"),
+                "tau (study)", "tau (estimate)", "Observations", "Studies"),
   `CHE-PET`   = summary_column(pet,   "sez"),
   `CHE-PEESE` = summary_column(peese, "I(sez^2)"),
   check.names = FALSE, stringsAsFactors = FALSE

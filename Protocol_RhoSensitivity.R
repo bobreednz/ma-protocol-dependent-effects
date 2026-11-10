@@ -204,12 +204,13 @@ cat("\nFigure_RhoIntercept.png saved.\n")
 # Figure: Variance components (tau and omega) vs rho (Figure_RhoVarianceComponents.png)
 # =============================================================================
 #
-# Tau (between-study SD) and omega (within-study SD) are not shown in the
+# tau (study), the between-study SD, and tau (estimate), the within-study SD,
+# are not shown in the
 # figure above, so they are plotted together here. As rho increases, more of
 # the observed similarity among a study's effect sizes is attributed to
 # correlated sampling error rather than to a shared study-level true effect,
 # so heterogeneity is mechanically reallocated away from the between-study
-# component (tau) and toward the within-study component (omega). Reshape to
+# component, tau (study), and toward the within-study component, tau (estimate). Reshape to
 # long format so both series share one legend.
 
 results_var <- results %>%
@@ -223,8 +224,8 @@ results_var <- results %>%
   mutate(
     component = recode(
       component,
-      tau   = "Tau (between-study SD)",
-      omega = "Omega (within-study SD)"
+      tau   = "tau (study): between-study SD",
+      omega = "tau (estimate): within-study SD"
     )
   )
 
@@ -245,12 +246,12 @@ p_var <- ggplot(results_var, aes(x = rho, y = value, color = component, linetype
            size = 3, color = "grey40") +
 
   scale_color_manual(values = c(
-    "Tau (between-study SD)"   = "black",
-    "Omega (within-study SD)"  = "#d6604d"
+    "tau (study): between-study SD"   = "black",
+    "tau (estimate): within-study SD"  = "#d6604d"
   )) +
   scale_linetype_manual(values = c(
-    "Tau (between-study SD)"   = "solid",
-    "Omega (within-study SD)"  = "dashed"
+    "tau (study): between-study SD"   = "solid",
+    "tau (estimate): within-study SD"  = "dashed"
   )) +
 
   labs(
@@ -259,7 +260,7 @@ p_var <- ggplot(results_var, aes(x = rho, y = value, color = component, linetype
     color    = NULL,
     linetype = NULL,
     title    = "Sensitivity of variance components to rho",
-    subtitle = "Between-study (tau) vs. within-study (omega) heterogeneity, CHE model (intercept only)."
+    subtitle = "Between-study and within-study heterogeneity, CHE model (intercept only)."
   ) +
   scale_x_continuous(breaks = seq(0, 0.95, by = 0.1)) +
   theme_bw(base_size = 11) +
@@ -289,8 +290,8 @@ tbl <- results %>%
     `Rho`           = rho,
     `Intercept`     = intercept,
     `SE (CR2)`      = se,
-    `Tau`           = tau,
-    `Omega`         = omega
+    `tau (study)`    = tau,
+    `tau (estimate)` = omega
   )
 
 write_xlsx(
