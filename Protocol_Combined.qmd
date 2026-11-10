@@ -55,7 +55,7 @@ After data cleaning (@sec-cleaning) and a preliminary analysis (@sec-prelim), th
 
 ## How to Use This Protocol {#sec-intro-use}
 
-**A quick start.** You do not need to read the whole protocol before running it. Download the project folder from GitHub, install JAGS (see @sec-software), open `MA_Protocol.Rproj`, then open `Protocol_Combined.qmd` and click through the code chunks in order. The example data and saved results for the slowest models are included, so a complete pass takes less than an hour and confirms that every step runs on your computer. The explanations can then be read section by section, as they become relevant to your own analysis.
+**A quick start.** You do not need to read the whole protocol before running it. Download the project folder from GitHub, install JAGS (see @sec-software), open `MA_Protocol.Rproj`, then open `Protocol_Combined.qmd` and choose Run > Run All (Ctrl+Alt+R). The example data and saved results for the slowest models are included, so a complete pass takes about 45 minutes and confirms that every step runs on your computer. The explanations can then be read section by section, as they become relevant to your own analysis.
 
 The protocol comes in two forms. The source is a Quarto document, `Protocol_Combined.qmd`, which combines the explanation with the R code that produces each table and figure. Opened in RStudio, it lets a researcher run the analysis by clicking through the code chunks in order, using the "Run" arrow on each chunk. Rendering the .qmd produces `Protocol_Combined.html`, the self-contained document most readers will read. The HTML version cannot run the code, but it shows it. The code for each step is folded under a "Code" button, and the "Code" menu at the top of the page shows the full .qmd source. The .qmd file, the rendered HTML, the R scripts, and the data are available at [github.com/bobreednz/ma-protocol-dependent-effects](https://github.com/bobreednz/ma-protocol-dependent-effects). To apply the protocol to a new meta-analysis, a researcher substitutes their own dataset and adjusts the variable names in the scripts, rather than writing new code for each method.
 
@@ -93,7 +93,7 @@ library(readxl)     # read_excel() used in all display chunks
 
 Each section's analysis is done by an R script, run separately from this document; rendering the protocol only reads the saved output files. The table lists the scripts in the order in which they should be run. Its run times are for a full run on the example data; with your own data they will vary with the numbers of estimates, studies, and moderators.
 
-The five slowest scripts (9, 10, 15, 16, and 19) load saved results for the example data by default. A reader who wants to check that everything runs on their own computer can therefore step through all the scripts in under an hour, about half of it for the z-plot (script 11). When you apply the protocol to your own data, set `refit <- TRUE` at the top of each of these five scripts; otherwise they will report the saved results for the example data.
+The five slowest scripts (9, 10, 15, 16, and 19) load saved results for the example data by default. A reader who wants to check that everything runs on their own computer can therefore step through all the scripts in under an hour. On the example data, most of that time goes to the PET-PEESE regressions (script 7) and the rho sensitivity analysis (script 18). When you apply the protocol to your own data, set `refit <- TRUE` at the top of each of these five scripts; otherwise they will report the saved results for the example data.
 
 | # | Script | Section | Main output | Full run time |
 |:--|:--|:--|:--|:--|
@@ -103,7 +103,7 @@ The five slowest scripts (9, 10, 15, 16, and 19) load saved results for the exam
 | 4 | `Protocol_StudyWeights.R` | [-@sec-prelim-weights] | `Table_StudyWeights.xlsx` | seconds |
 | 5 | `Protocol_FiveEstimators.R` | [-@sec-estimators] | `Table_FiveEstimators.xlsx` | about 2 minutes |
 | 6 | `Protocol_FunnelPlot.R` | [-@sec-funnel] | `Figure_FunnelPlot.png` | seconds |
-| 7 | `Protocol_CHE_PET.R`, `Protocol_CHE_PEESE.R` | [-@sec-petpeese] | `Table_CHE_PET.xlsx`, `Table_CHE_PEESE.xlsx` | a few minutes each |
+| 7 | `Protocol_CHE_PET.R`, `Protocol_CHE_PEESE.R` | [-@sec-petpeese] | `Table_CHE_PET.xlsx`, `Table_CHE_PEESE.xlsx` | 5 to 7 minutes each |
 | 8 | `Protocol_CHE_ISCW.R` | [-@sec-petpeese] | `Table_CHE_ISCW.xlsx` | 1 to 3 minutes |
 | 9 | `Protocol_SelectionModels.R` | [-@sec-selection] | `Table_SelectionModels.xlsx` | about 3 minutes |
 | 10 | `Protocol_RoBMA_CHE_Intercept.R` | [-@sec-robma] | `Table_RoBMA_CHE_Intercept.xlsx` | about 3.5 hours |
@@ -114,7 +114,7 @@ The five slowest scripts (9, 10, 15, 16, and 19) load saved results for the exam
 | 15 | `Protocol_Selection_MetaReg.R` | [-@sec-mr-selection] | `Table_Selection_MetaReg.xlsx` | 15 to 20 minutes |
 | 16 | `Protocol_RoBMA_CHE_MetaReg.R` | [-@sec-mr-robma] | `Table_RoBMA_CHE_MetaReg.xlsx` | about 4 hours |
 | 17 | `Protocol_Sensitivity.R` | [-@sec-sensitivity] | `Table_Sensitivity.xlsx` | seconds |
-| 18 | `Protocol_RhoSensitivity.R` | [App. A](#sec-app-rho) | `Table_RhoSensitivity.xlsx`, two figures | about 6 minutes |
+| 18 | `Protocol_RhoSensitivity.R` | [App. A](#sec-app-rho) | `Table_RhoSensitivity.xlsx`, two figures | 10 to 15 minutes |
 | 19 | `Protocol_Outliers.R` | [App. B](#sec-app-outliers) | `Table_Jackknife_CHE.xlsx`, two figures | about 1.5 hours |
 
 ---

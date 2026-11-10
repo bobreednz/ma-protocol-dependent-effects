@@ -68,9 +68,11 @@ Open `MA_Protocol.Rproj` (double-click it, or use File > Open Project in RStudio
 
 ### 4. Render the protocol, or reproduce the results
 
+**Quick check.** To confirm that everything runs on your computer, open `Protocol_Combined.qmd` and choose **Run > Run All** (Ctrl+Alt+R). This runs every script in order. The slowest models load their saved results, so a complete pass takes about 45 minutes on the example data.
+
 **Render.** Open `Protocol_Combined.qmd` and click **Render**. The document only reads the saved output files, so it renders without running any analysis.
 
-**Reproduce.** Run the scripts in the order below, then render again. Every script after the first reads `SCData_processed.rds`, the dataset produced by script 1, except three that read only the output of earlier scripts: script 11 needs the saved fit from script 10, script 12 needs scripts 5 and 8 to 10, and script 17 needs scripts 12 to 16. The five slowest scripts (9, 10, 15, 16, and 19) load saved results by default, so the whole sequence runs in under an hour on the example data (about half of it for the z-plot, script 11). To re-estimate, set `refit <- TRUE` at the top of the script. The run times in the table are for a full run, with every script refit.
+**Reproduce.** Run the scripts in the order below, then render again. Every script after the first reads `SCData_processed.rds`, the dataset produced by script 1, except three that read only the output of earlier scripts: script 11 needs the saved fit from script 10, script 12 needs scripts 5 and 8 to 10, and script 17 needs scripts 12 to 16. The five slowest scripts (9, 10, 15, 16, and 19) load saved results by default, so the whole sequence runs in under an hour on the example data, most of it in the PET-PEESE regressions (script 7) and the rho sensitivity analysis (script 18). To re-estimate, set `refit <- TRUE` at the top of the script. The run times in the table are for a full run, with every script refit.
 
 | # | Script | Protocol section | Main output | Full run time |
 |:--|:--|:--|:--|:--|
@@ -80,7 +82,7 @@ Open `MA_Protocol.Rproj` (double-click it, or use File > Open Project in RStudio
 | 4 | `Protocol_StudyWeights.R` | 4.2 Study weights | `Table_StudyWeights.xlsx` | seconds |
 | 5 | `Protocol_FiveEstimators.R` | 4 Five models | `Table_FiveEstimators.xlsx` | about 2 minutes |
 | 6 | `Protocol_FunnelPlot.R` | 5.1 Funnel plot | `Figure_FunnelPlot.png` | seconds |
-| 7 | `Protocol_CHE_PET.R`, `Protocol_CHE_PEESE.R` | 5.2 CHE-PET-PEESE | `Table_CHE_PET.xlsx`, `Table_CHE_PEESE.xlsx` | a few minutes each |
+| 7 | `Protocol_CHE_PET.R`, `Protocol_CHE_PEESE.R` | 5.2 CHE-PET-PEESE | `Table_CHE_PET.xlsx`, `Table_CHE_PEESE.xlsx` | 5 to 7 minutes each |
 | 8 | `Protocol_CHE_ISCW.R` | 5.2 Robustness check (CHE-ISCW) | `Table_CHE_ISCW.xlsx` | 1 to 3 minutes |
 | 9 | `Protocol_SelectionModels.R` | 5.3 Selection models | `Table_SelectionModels.xlsx` | about 3 minutes |
 | 10 | `Protocol_RoBMA_CHE_Intercept.R` | 5.4 RoBMA | `Table_RoBMA_CHE_Intercept.xlsx` | about 3.5 hours |
@@ -91,7 +93,7 @@ Open `MA_Protocol.Rproj` (double-click it, or use File > Open Project in RStudio
 | 15 | `Protocol_Selection_MetaReg.R` | 7.2 Selection-model meta-regression | `Table_Selection_MetaReg.xlsx` | 15 to 20 minutes |
 | 16 | `Protocol_RoBMA_CHE_MetaReg.R` | 7.3 RoBMA meta-regression | `Table_RoBMA_CHE_MetaReg.xlsx` | about 4 hours |
 | 17 | `Protocol_Sensitivity.R` | 8 Sensitivity summary | `Table_Sensitivity.xlsx` | seconds |
-| 18 | `Protocol_RhoSensitivity.R` | Appendix A: choice of rho | `Table_RhoSensitivity.xlsx`, two figures | about 6 minutes |
+| 18 | `Protocol_RhoSensitivity.R` | Appendix A: choice of rho | `Table_RhoSensitivity.xlsx`, two figures | 10 to 15 minutes |
 | 19 | `Protocol_Outliers.R` | Appendix B: outliers | `Table_Jackknife_CHE.xlsx`, two figures | about 1.5 hours |
 
 Run times are for the example data on a standard desktop computer; with other data they vary with the numbers of estimates, studies, and moderators. The selection-model bootstraps run in parallel and take longer with fewer processor cores.

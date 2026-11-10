@@ -65,7 +65,7 @@ cat(sprintf("Dataset: %d observations from %d studies.\n",
 # study-level random effect. rho = 1 is not identified (all within-study
 # variation collapses into a single block), so we stop at 0.95.
 #
-# 20 model fits take roughly 6 minutes in total; no bootstrap is required.
+# 20 model fits take roughly 10 to 15 minutes in total; no bootstrap is required.
 
 rho_values <- seq(0, 0.95, by = 0.05)
 n_rho      <- length(rho_values)
