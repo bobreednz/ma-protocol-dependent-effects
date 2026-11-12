@@ -120,6 +120,46 @@ sel       <- if (use_peese) peese else pet
 cat(sprintf("PET intercept = %.3f (p = %.3f): the PET-PEESE rule selects %s.\n",
             pet_int$beta, pet_int$p_Satt, selected))
 
+# -- Optional: two other ways to code the moderators (not run) ---------------
+# The protocol does not use these, but a researcher may want them. Remove the
+# leading "# " from a block to run it. Both use the PET bias term (sez); use
+# I(sez^2) instead if the PET-PEESE rule above selects PEESE.
+#
+# (1) Separating within-study and between-study effects.
+# When a moderator varies within studies, its coefficient blends a comparison
+# between studies with a comparison within them. To separate the two, replace
+# the moderator with its study mean ("between") and each estimate's deviation
+# from that mean ("within"). The example uses Endog_IV, which varies within
+# 22 of the 83 studies. The within part already has a mean of zero; the
+# between part is centered so the intercept keeps its meaning.
+#
+# DT$Endog_IV_between   <- ave(as.numeric(DT$Endog_IV), DT$newid)  # study mean
+# DT$Endog_IV_within    <- as.numeric(DT$Endog_IV) - DT$Endog_IV_between
+# DT$Endog_IV_between_c <- DT$Endog_IV_between - mean(DT$Endog_IV_between)
+# rhs_split <- sub("Endog_IV_c", "Endog_IV_between_c + Endog_IV_within", rhs_mods)
+# fit_split <- rma.mv(as.formula(paste("z ~ 1 + sez +", rhs_split)),
+#                     V = V_mat, random = ~ 1 | newid/obs,
+#                     data = DT, method = "REML")
+# coef_test(fit_split, vcov = "CR2", cluster = DT$newid)
+# # Do the within and between effects differ? (CR2 Wald test)
+# Wald_test(fit_split,
+#           constraints = constrain_equal(c("Endog_IV_between_c", "Endog_IV_within")),
+#           vcov = "CR2", cluster = DT$newid)
+#
+# (2) Adjusted subgroup means.
+# To estimate the corrected mean for each group of a binary moderator at
+# average values of the other moderators, drop the intercept, enter the
+# moderator as a factor, and keep the others centered. The example compares
+# unpublished (0) and published (1) studies.
+#
+# rhs_other <- paste(paste0(setdiff(moderators, "Published"), "_c"), collapse = " + ")
+# fit_sub <- rma.mv(as.formula(paste("z ~ 0 + factor(Published) + sez +", rhs_other)),
+#                   V = V_mat, random = ~ 1 | newid/obs,
+#                   data = DT, method = "REML")
+# coef_test(fit_sub, vcov = "CR2", cluster = DT$newid)
+# # The first two coefficients are the corrected means for unpublished and
+# # published studies.
+
 # -- Formatting helpers -------------------------------------------------------
 
 f3    <- function(x) formatC(x, digits = 3, format = "f")
