@@ -2,7 +2,7 @@
 # Protocol_CHE_PETPEESE_MetaReg.R
 # =============================================================================
 # Purpose: the CHE-PET-PEESE meta-regression with the 18 moderators
-# (Section 7.1). Replaces Protocol_Table6.R (BMS model averaging dropped).
+# (Section 7.2). Replaces Protocol_Table6.R (BMS model averaging dropped).
 #
 # One regression answers three questions:
 #   1. The corrected mean effect with the moderators held at their sample
@@ -28,7 +28,7 @@
 #   "Moderators" -- moderator coefficients from the model the rule selects,
 #                   with the Satterthwaite degrees of freedom of each test
 #   "Values"     -- unformatted numbers, for use in later sections
-# Run time: under a minute.
+# Run time: 1 to 2 minutes.
 # =============================================================================
 
 # -- Packages -----------------------------------------------------------------

@@ -88,10 +88,10 @@ Open `MA_Protocol.Rproj` (double-click it, or use File > Open Project in RStudio
 | 10 | `Protocol_RoBMA_CHE_Intercept.R` | 5.4 RoBMA | `Table_RoBMA_CHE_Intercept.xlsx` | about 3.5 hours |
 | 11 | `Protocol_Zplot_CHE.R` | 6.1 Z-plot | `Figure_Zplot_CHE.png` | about 5 minutes |
 | 12 | `Protocol_Diagnostics.R` | 6.2 Selection weights | `Table_Diagnostics.xlsx` | seconds |
-| 13 | `Protocol_CHE_PETPEESE_MetaReg.R` | 7.1 CHE-PET-PEESE meta-regression | `Table_CHE_PETPEESE_MetaReg.xlsx` | 1 to 2 minutes |
-| 14 | `Protocol_CHE_PETPEESE_BestPractice.R` | 7.1 Best-practice predictions | `Table_CHE_PETPEESE_BestPractice.xlsx` | under a minute |
-| 15 | `Protocol_Selection_MetaReg.R` | 7.2 Selection-model meta-regression | `Table_Selection_MetaReg.xlsx` | 15 to 20 minutes |
-| 16 | `Protocol_RoBMA_CHE_MetaReg.R` | 7.3 RoBMA meta-regression | `Table_RoBMA_CHE_MetaReg.xlsx` | about 4 hours |
+| 13 | `Protocol_CHE_PETPEESE_MetaReg.R` | 7.2 CHE-PET-PEESE meta-regression | `Table_CHE_PETPEESE_MetaReg.xlsx` | 1 to 2 minutes |
+| 14 | `Protocol_CHE_PETPEESE_BestPractice.R` | 7.2 Best-practice predictions | `Table_CHE_PETPEESE_BestPractice.xlsx` | under a minute |
+| 15 | `Protocol_Selection_MetaReg.R` | 7.3 Selection-model meta-regression | `Table_Selection_MetaReg.xlsx` | 15 to 20 minutes |
+| 16 | `Protocol_RoBMA_CHE_MetaReg.R` | 7.4 RoBMA meta-regression | `Table_RoBMA_CHE_MetaReg.xlsx` | about 4 hours |
 | 17 | `Protocol_Sensitivity.R` | 8 Sensitivity summary | `Table_Sensitivity.xlsx` | seconds |
 | 18 | `Protocol_RhoSensitivity.R` | Appendix A: choice of rho | `Table_RhoSensitivity.xlsx`, two figures | 10 to 15 minutes |
 | 19 | `Protocol_Outliers.R` | Appendix B: outliers | `Table_Jackknife_CHE.xlsx`, two figures | about 1.5 hours |
@@ -100,7 +100,7 @@ Run times are for the example data on a standard desktop computer; with other da
 
 ## Software versions
 
-The results in the protocol were produced with RoBMA 4.1.1 and BayesTools 0.4.0 from CRAN, and with metaselection 0.1.5. Later versions of these packages may give slightly different results. Run `packageVersion("RoBMA")` to see which version you have installed.
+The results in the protocol were produced with RoBMA 4.1.1 and BayesTools 0.4.0 from CRAN, and with metaselection 0.1.5 (the selection-model results are identical under the CRAN version, 0.3.0). Later versions of these packages may give slightly different results. Run `packageVersion("RoBMA")` to see which version you have installed.
 
 ## Using this protocol with your own data
 

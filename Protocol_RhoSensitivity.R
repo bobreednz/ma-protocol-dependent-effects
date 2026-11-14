@@ -62,8 +62,8 @@ cat(sprintf("Dataset: %d observations from %d studies.\n",
 # We try rho from 0 to 0.95 in steps of 0.05, giving 20 candidate values.
 # rho = 0 corresponds to the hierarchical effects (HE) model where effect
 # sizes within a study are treated as independent after accounting for the
-# study-level random effect. rho = 1 is not identified (all within-study
-# variation collapses into a single block), so we stop at 0.95.
+# study-level random effect. rho = 1 makes the sampling covariance matrix
+# singular (each study's block has rank one), so we stop at 0.95.
 #
 # 20 model fits take roughly 10 to 15 minutes in total; no bootstrap is required.
 

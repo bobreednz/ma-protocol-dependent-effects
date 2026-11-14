@@ -44,11 +44,12 @@ V_mat <- vcalc(
 #
 # This is the key step for Panel B. With centered controls,
 # the intercept in each model directly gives the "Effect
-# beyond bias": the estimated mean effect when sez = 0 (no
-# publication bias) and all controls are at their means
-# (centered values = 0). This means we can read the "Effect
-# beyond bias" and its CR2 standard error directly from
-# coef_test(), with no post-estimation prediction required.
+# beyond bias": the estimated mean effect when sez = 0 (the
+# extrapolation to a study of perfect precision) and all
+# controls are at their means (centered values = 0). This
+# means we can read the "Effect beyond bias" and its CR2
+# standard error directly from coef_test(), with no
+# post-estimation prediction required.
 # ============================================================
 
 DT <- DT %>%

@@ -47,7 +47,8 @@ if (!requireNamespace("RoBMA", quietly = TRUE) ||
 
 # ---- Step 3: report the versions installed ---------------------------------
 # The results reported in the protocol were produced with RoBMA 4.1.1,
-# BayesTools 0.4.0, and metaselection 0.1.5.
+# BayesTools 0.4.0, and metaselection 0.1.5 (the selection-model results
+# are identical under metaselection 0.3.0, the current CRAN version).
 cat("\nInstalled versions:\n")
 for (p in c("RoBMA", "BayesTools", "metaselection", "metafor", "clubSandwich")) {
   cat(sprintf("  %-14s %s\n", p, as.character(packageVersion(p))))

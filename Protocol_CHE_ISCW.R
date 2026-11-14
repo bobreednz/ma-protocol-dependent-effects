@@ -29,7 +29,7 @@
 #   Table_CHE_ISCW.xlsx  "Display": the two-column robustness table
 #                        "Values":  numeric values used by
 #                                   Protocol_Diagnostics.R
-# Run time: about a minute.
+# Run time: 1 to 3 minutes.
 # =============================================================================
 
 start_time <- proc.time()   # record start time so run time can be reported

@@ -29,42 +29,34 @@ n_studies <- length(unique(DT$newid))
 DT <- DT %>% mutate(obs_id = row_number())
 
 # ============================================================
-# FE and RE: Aggregate to study level, then fit rma()
+# FE and RE: fit to all estimates, then sum weights by study
 #
-# We use rma() rather than rma.mv() here because:
-#   (1) The weights() function works cleanly with rma().
-#   (2) The purpose of Table 3 is to illustrate the
-#       weighting properties of FE and RE as simple
-#       benchmarks before introducing the multi-level
-#       models. Using rma() is consistent with the protocol.
-# Note: rma() treats each effect size as independent, which
-# ignores within-study dependence. This is intentional here
-# since the table is about weighting, not inference.
+# These are the FE and RE models of Table 4 (tbl-table4),
+# fitted to all 957 estimates. Each treats every estimate as
+# independent. rma() gives the same estimates as the rma.mv()
+# calls in Protocol_FiveEstimators.R (RE: random = ~ 1 | obs)
+# and its weights() are simpler to extract.
 #
-# Aggregation:
-#   Study-level estimate: precision-weighted mean of z within
-#     each study (weights = 1/sez^2)
-#   Study-level variance: 1 / sum(1/sez^2) within each study
+# weights() returns each estimate's share of the total weight,
+# in percent. Summing within newid gives each study's share.
+# Under FE, a study's weight is the sum of the precisions of its
+# estimates. Under RE, each estimate's weight is 1/(sez^2 + tau^2),
+# so a study's weight still grows with every estimate it reports.
 # ============================================================
 
-study_agg <- DT %>%
+model_FE <- rma(yi = z, sei = sez, data = DT, method = "FE")
+model_RE <- rma(yi = z, sei = sez, data = DT, method = "REML")
+
+study_w <- DT %>%
+  mutate(w_FE_obs = as.numeric(weights(model_FE)),
+         w_RE_obs = as.numeric(weights(model_RE))) %>%
   group_by(newid) %>%
-  summarise(
-    z_study  = sum(z / sez^2) / sum(1 / sez^2),  # precision-weighted mean
-    v_study  = 1 / sum(1 / sez^2),                # study-level sampling variance
-    .groups  = "drop"
-  ) %>%
-  mutate(se_study = sqrt(v_study))
+  summarise(w_FE = sum(w_FE_obs), w_RE = sum(w_RE_obs), .groups = "drop") %>%
+  mutate(w_FE = w_FE / sum(w_FE) * 100,   # normalise to exactly 100
+         w_RE = w_RE / sum(w_RE) * 100)
 
-# Fit FE and RE at the study level
-model_FE <- rma(yi = z_study, sei = se_study, data = study_agg, method = "FE")
-model_RE <- rma(yi = z_study, sei = se_study, data = study_agg, method = "REML")
-
-# Study-level weights from FE and RE (already one row per study)
-study_w <- study_agg %>%
-  mutate(w_FE = weights(model_FE),
-         w_RE = weights(model_RE)) %>%
-  select(newid, w_FE, w_RE)
+# Diagnostic: the RE mean should match Table 4 (0.145)
+cat(sprintf("RE mean (all estimates): %.3f\n", as.numeric(coef(model_RE))))
 
 # ============================================================
 # HE: Fit three-level model on full data, extract GLS weights
@@ -129,13 +121,15 @@ study_w <- study_w %>% left_join(study_w_HE, by = "newid")
 # ============================================================
 # I-squared and tau for RE
 #
+# RE is fitted to all estimates without study structure, so its
+# tau is the total heterogeneity across estimates, as in Table 4.
 # We report tau (the SD, sqrt of tau-squared) rather than
 # tau-squared since tau is on the same scale as the effect sizes.
 # No CIs are reported for any heterogeneity statistics.
 # ============================================================
 
 tau2_est <- model_RE$tau2
-tau_RE   <- sqrt(tau2_est)   # between-study SD
+tau_RE   <- sqrt(tau2_est)   # total SD of true effects across estimates
 i2_est   <- model_RE$I2
 
 # ============================================================
@@ -145,8 +139,8 @@ i2_est   <- model_RE$I2
 #   tau (study)    = sqrt(sigma2[1]) = between-study SD
 #   tau (estimate) = sqrt(sigma2[2]) = within-study SD (between-estimate)
 #
-# I-squared components use the harmonic mean of the sampling
-# variances (Cheung, 2014; Konstantopoulos, 2011).
+# I-squared components use the "typical" sampling variance
+# (Higgins and Thompson, 2002; Cheung, 2014; Konstantopoulos, 2011).
 # Profile-likelihood CIs for rma.mv are very slow to compute,
 # so only point estimates are reported for HE.
 # ============================================================
@@ -156,8 +150,9 @@ tau2_within  <- model_HE$sigma2[2]  # within-study variance
 
 tau_between  <- sqrt(tau2_between)  # between-study SD (tau)
 omega_within <- sqrt(tau2_within)   # within-study SD (omega)
+tau_total_HE <- sqrt(tau2_between + tau2_within)  # total SD, comparable to RE
 
-# Harmonic mean of the sampling variances
+# Typical sampling variance (Higgins and Thompson, 2002)
 vi_vec <- DT$sez^2
 w_vec  <- 1 / vi_vec
 v_bar  <- ((length(vi_vec) - 1) * sum(w_vec)) / (sum(w_vec)^2 - sum(w_vec^2))
@@ -206,11 +201,12 @@ cat(sprintf("Top 10 studies by FE weight (id): %s\n",
 
 table3 <- tibble(
   # tau (study) = between-study SD; tau (estimate) = within-study SD
-  # (HE only). I-squared comes last: it depends on the precision of the
+  # (HE only); tau (total) = square root of the sum of the variances.
+  # I-squared comes last: it depends on the precision of the
   # estimates, so it is not a measure of how much the true effects vary.
   Statistic = c("Mean", "Median", "5%", "10%", "90%", "95%",
                 "Minimum", "Maximum", "Top 3", "Top 10",
-                "tau (study)", "tau (estimate)", "I-squared", "Studies"),
+                "tau (study)", "tau (estimate)", "tau (total)", "I-squared", "Studies"),
 
   FE = c(
     fmt_pct(mean(study_w$w_FE)),
@@ -225,6 +221,7 @@ table3 <- tibble(
     fmt_pct(top10_FE),
     "--",   # tau (study)
     "--",   # tau (estimate)
+    "--",   # tau (total)
     "--",   # I-squared
     as.character(n_studies)
   ),
@@ -240,9 +237,11 @@ table3 <- tibble(
     fmt_pct(max(study_w$w_RE)),
     fmt_pct(top3_RE),
     fmt_pct(top10_RE),
-    # RE is fitted to the 83 study means, so its tau is between studies
-    formatC(tau_RE, digits = 4, format = "f"),   # tau (study), no CI
-    "--",                                        # tau (estimate): RE has no within-study component
+    # RE is fitted to all estimates without study structure, so its
+    # single tau is the total heterogeneity across estimates
+    "--",                                        # tau (study)
+    "--",                                        # tau (estimate)
+    formatC(tau_RE, digits = 4, format = "f"),   # tau (total), no CI
     paste0(formatC(i2_est, digits = 1, format = "f"), "%"),
     as.character(n_studies)
   ),
@@ -260,6 +259,7 @@ table3 <- tibble(
     fmt_pct(top10_HE),
     formatC(tau_between,  digits = 4, format = "f"),  # tau (study): between-study SD
     formatC(omega_within, digits = 4, format = "f"),  # tau (estimate): within-study SD
+    formatC(tau_total_HE, digits = 4, format = "f"),  # tau (total)
     paste0(formatC(I2_total_HE, digits = 1, format = "f"), "%"),
     as.character(n_studies)
   )

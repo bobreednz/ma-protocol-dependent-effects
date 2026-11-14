@@ -87,9 +87,13 @@ n_true_dup <- sum(DT$flag_true_duplicate)
 if (n_true_dup == 0) {
   cat("PASS: No true duplicates (identical on all variables except obs).\n")
 } else {
-  cat(sprintf("FAIL: %d observations (%d pairs) are identical on all variables except obs.\n",
-              n_true_dup, as.integer(n_true_dup / 2)))
-  cat("      One copy of each pair should be removed before analysis.\n")
+  # A duplicate group can have more than two rows, so count groups and
+  # excess rows rather than assuming pairs.
+  n_dup_groups <- nrow(distinct(DT[DT$flag_true_duplicate == 1, all_vars_except_obs]))
+  cat(sprintf("FAIL: %d observations in %d groups are identical on all variables except obs.\n",
+              n_true_dup, n_dup_groups))
+  cat(sprintf("      Keeping one copy of each group would remove %d excess rows.\n",
+              n_true_dup - n_dup_groups))
   true_dup_summary <- DT %>%
     filter(flag_true_duplicate == 1) %>%
     group_by(newid) %>%
@@ -109,10 +113,15 @@ if (n_true_dup == 0) {
 # dropped; they indicate a data coding decision that needs to
 # be resolved by the researcher.
 
+# Every row in a newid/z/sez/tstat group is flagged if the group contains
+# more than one distinct coding profile, including rows that also have a
+# true duplicate in the group.
+DT$profile_key <- do.call(paste, c(DT[all_vars_except_obs], sep = "\u001f"))
 DT <- DT %>%
   group_by(newid, z, sez, tstat) %>%
-  mutate(flag_coding_conflict = as.integer(n() > 1 & flag_true_duplicate == 0)) %>%
+  mutate(flag_coding_conflict = as.integer(n_distinct(profile_key) > 1)) %>%
   ungroup()
+DT$profile_key <- NULL
 
 n_conflict <- sum(DT$flag_coding_conflict)
 
@@ -163,17 +172,17 @@ for (v in binary_vars) {
 if (all_binary_ok) cat("PASS: All binary variables contain only 0/1 values.\n")
 
 # sez must be strictly positive
-if (all(DT$sez > 0)) {
+if (all(DT$sez > 0, na.rm = TRUE)) {
   cat("PASS: All sez values are strictly positive.\n")
 } else {
-  cat(sprintf("FAIL: %d observations have sez <= 0.\n", sum(DT$sez <= 0)))
+  cat(sprintf("FAIL: %d observations have sez <= 0.\n", sum(DT$sez <= 0, na.rm = TRUE)))
 }
 
-# df must be strictly positive
-if (all(DT$df > 0)) {
-  cat("PASS: All df values are strictly positive.\n")
+# df must exceed 1, since the SE benchmark in Check 6 uses 1/sqrt(df - 1)
+if (all(DT$df > 1, na.rm = TRUE)) {
+  cat("PASS: All df values exceed 1.\n")
 } else {
-  cat(sprintf("FAIL: %d observations have df <= 0.\n", sum(DT$df <= 0)))
+  cat(sprintf("FAIL: %d observations have df <= 1.\n", sum(DT$df <= 1, na.rm = TRUE)))
 }
 
 # z must be finite (no Inf or NaN)
@@ -184,19 +193,19 @@ if (all(is.finite(DT$z))) {
 }
 
 # PubYear: reasonable range for published social capital research
-if (all(DT$PubYear >= 1990 & DT$PubYear <= 2030)) {
+if (all(DT$PubYear >= 1990 & DT$PubYear <= 2030, na.rm = TRUE)) {
   cat("PASS: All PubYear values are in the range [1990, 2030].\n")
 } else {
   cat(sprintf("NOTE: %d observations have PubYear outside [1990, 2030].\n",
-              sum(DT$PubYear < 1990 | DT$PubYear > 2030)))
+              sum(DT$PubYear < 1990 | DT$PubYear > 2030, na.rm = TRUE)))
 }
 
 # NumberSCVars: must be at least 1
-if (all(DT$NumberSCVars >= 1)) {
+if (all(DT$NumberSCVars >= 1, na.rm = TRUE)) {
   cat("PASS: All NumberSCVars values are >= 1.\n\n")
 } else {
   cat(sprintf("FAIL: %d observations have NumberSCVars < 1.\n\n",
-              sum(DT$NumberSCVars < 1)))
+              sum(DT$NumberSCVars < 1, na.rm = TRUE)))
 }
 
 # ============================================================
@@ -221,7 +230,7 @@ all_exclusive_ok <- TRUE
 for (label in names(dummy_sets)) {
   vars    <- dummy_sets[[label]]
   row_sum <- rowSums(DT[, vars])
-  bad     <- sum(row_sum != 1)
+  bad     <- sum(row_sum != 1, na.rm = TRUE)
   if (bad == 0) {
     cat(sprintf("PASS: %s sums to 1 for all observations.\n", label))
   } else {
@@ -244,7 +253,7 @@ cat("--- CHECK 5: Internal consistency of derived variables ---\n")
 
 # z vs atanh(pcc)
 z_diff <- abs(DT$z - atanh(DT$pcc))
-if (all(z_diff < 1e-6)) {
+if (all(z_diff < 1e-6, na.rm = TRUE)) {
   cat("PASS: z = atanh(pcc) holds to within 1e-6 for all observations.\n")
 } else {
   cat(sprintf("FAIL: z != atanh(pcc) for %d observations (max diff = %.2e).\n",
@@ -253,7 +262,7 @@ if (all(z_diff < 1e-6)) {
 
 # tstat vs pcc/sepcc
 tstat_diff <- abs(DT$tstat - DT$pcc / DT$sepcc)
-if (all(tstat_diff < 1e-4)) {
+if (all(tstat_diff < 1e-4, na.rm = TRUE)) {
   cat("PASS: tstat = pcc/sepcc holds to within 1e-4 for all observations.\n\n")
 } else {
   cat(sprintf("FAIL: tstat != pcc/sepcc for %d observations (max diff = %.2e).\n\n",
@@ -268,8 +277,8 @@ if (all(tstat_diff < 1e-4)) {
 #   sez = 1 / sqrt(df - 1)
 #
 # We compute the "SE deficit" = (1/sqrt(df-1)) - sez, i.e.,
-# how much smaller the reported sez is than the theoretical
-# minimum for the given df. A positive deficit means the SE
+# how much smaller the reported sez is than the benchmark
+# for the given df (an approximation, not an exact minimum). A positive deficit means the SE
 # is smaller than the formula allows.
 #
 # Small deficits (< 0.01) typically reflect rounding: many
@@ -287,7 +296,7 @@ if (all(tstat_diff < 1e-4)) {
 # ============================================================
 
 cat("--- CHECK 6: Standard error consistency with degrees of freedom ---\n")
-cat("    Formula: theoretical minimum sez = 1/sqrt(df - 1)\n")
+cat("    Benchmark: sez is approximately 1/sqrt(df - 1)\n")
 cat("    SE deficit = (1/sqrt(df-1)) - sez\n\n")
 
 DT$sez_theoretical <- 1 / sqrt(DT$df - 1)
@@ -324,7 +333,7 @@ cat("\n")
 #
 # We flag observations with unusually large effect sizes.
 # In the social capital / economic growth literature, partial
-# correlations above 0.80 (|z| > 1.0) are exceptionally
+# correlations above about 0.76 (|z| > 1.0) are exceptionally
 # large. We also flag based on a statistical criterion:
 # estimates more than 3 standard deviations from the mean z.
 #
@@ -423,6 +432,7 @@ DT$flag_any <- as.integer(
   DT$flag_coding_conflict == 1 |
   DT$flag_se_major        == 1 |
   DT$flag_outlier_z1      == 1 |
+  DT$flag_outlier_z2      == 1 |
   DT$flag_small_df        == 1
 )
 # (Minor SE deficit is excluded from flag_any as it is not

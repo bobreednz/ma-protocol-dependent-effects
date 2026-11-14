@@ -2,7 +2,7 @@
 # Protocol_Selection_MetaReg.R
 # =============================================================================
 # Purpose: the step-function selection model with the 18 moderators, and its
-# best-practice predictions (Section 7.2).
+# best-practice predictions (Section 7.3).
 #
 # Which selection model? Section 6.2 decides between the 3PSM and the 4PSM.
 # Set psm_model below to the one it favors:
@@ -17,9 +17,9 @@
 # Three fits, identical except for where the moderators are centered:
 #   "mean": moderators centered at their sample means. The intercept is the
 #           corrected mean effect for a study with average characteristics
-#           (comparable with the CHE-PET-PEESE intercept in Section 7.1).
+#           (comparable with the CHE-PET-PEESE intercept in Section 7.2).
 #           The lambdas and the moderator coefficients come from this fit.
-#   "bp1":  moderators centered at the best-practice values, non-OECD/Europe.
+#   "bp1":  moderators centered at the best-practice values, Other Regions.
 #   "bp2":  the same, OECD/Europe.
 #           In the two best-practice fits the intercept IS the best-practice
 #           prediction, so its bootstrap interval comes directly from the fit.
@@ -54,7 +54,7 @@
 #   "Moderators"            moderator coefficients with bootstrap intervals,
 #                           and the number of studies with each binary
 #                           characteristic (a rare one makes replications fail)
-#   "BP1 - Non-OECD Europe" best-practice prediction, Fisher's z and PCC
+#   "BP1 - Other Regions" best-practice prediction, Fisher's z and PCC
 #   "BP2 - OECD Europe"     the same for OECD/Europe
 #   "Notes"                 the best-practice values, one note per scenario
 #   "Values"                unformatted numbers, for use in Section 8
@@ -79,7 +79,8 @@ steps <- switch(psm_model,
 
 # ---- Packages ----------------------------------------------------------------
 # metaselection is on CRAN (version 0.3.0 or later). The results reported in
-# the protocol were produced with development version 0.1.5.
+# the protocol were produced with development version 0.1.5 and reproduced
+# exactly with CRAN version 0.3.0 (refit on 2026-11-14).
 packages <- c("here", "metaselection", "future", "progressr", "writexl")
 installed <- packages %in% installed.packages()[, "Package"]
 if (any(!installed)) install.packages(packages[!installed])
@@ -95,7 +96,7 @@ n_studies <- length(unique(dat$newid))
 cat(sprintf("Dataset: %d observations from %d studies.\n", n_obs, n_studies))
 
 # ---- Moderators ---------------------------------------------------------------
-# Same 18 moderators, in the same order, as in Section 7.1
+# Same 18 moderators, in the same order, as in Section 7.2
 moderators <- c(
   "SC1_Cognitive", "SC1_Structural", "DV_GrowthRate", "PubYear", "Published",
   "LaggedDV", "LaggedSC", "NumberSCVars", "Endog_IV", "Endog_FE",
@@ -103,7 +104,7 @@ moderators <- c(
   "Reg_OECDEurope", "Reg_US", "Reg_Africa", "Reg_Asia"
 )
 
-# Labels used in the table (same wording as Table 1 and Section 7.1)
+# Labels used in the table (same wording as Table 1 and Section 7.2)
 mod_labels <- c(
   SC1_Cognitive  = "SC: Cognitive",
   SC1_Structural = "SC: Structural",
@@ -130,7 +131,7 @@ continuous <- c("PubYear", "NumberSCVars")
 sds <- sapply(continuous, function(v) sd(as.numeric(dat[[v]])))
 
 # Best-practice values (identical to Protocol_CHE_PETPEESE_BestPractice.R). The two scenarios
-# differ only in region: BP1 = non-OECD/Europe, BP2 = OECD/Europe.
+# differ only in region: BP1 = Other Regions, BP2 = OECD/Europe.
 bp_values <- function(oecd) c(
   SC1_Cognitive = 1, SC1_Structural = 0, DV_GrowthRate = 1,
   PubYear = mean(as.numeric(dat$PubYear)), Published = 1,
@@ -334,7 +335,7 @@ bp2 <- bp_panel(fits$bp2)
 bp_note <- function(oecd, fit) {
   paste0(
     "\"Best Practice\" predictions are derived from the ", psm_model,
-    " meta-regression with 18 moderators (Section 7.2). ",
+    " meta-regression with 18 moderators (Section 7.3). ",
     "Predictions are evaluated at SC1_Cognitive = 1, SC1_Structural = 0, ",
     "SC1_Other = 0 (reference), DV_GrowthRate = 1, DV_GDPLevel = 0 (reference), PubYear = ",
     round(mean(as.numeric(dat$PubYear)), 1), " (sample mean), Published = 1, LaggedDV = 0, ",
@@ -349,7 +350,7 @@ bp_note <- function(oecd, fit) {
   )
 }
 notes_sheet <- data.frame(
-  Scenario = c("BP1 - Non-OECD/Europe", "BP2 - OECD/Europe"),
+  Scenario = c("BP1 - Other Regions", "BP2 - OECD/Europe"),
   Note     = c(bp_note(0, fits$bp1), bp_note(1, fits$bp2)),
   stringsAsFactors = FALSE
 )
@@ -367,7 +368,7 @@ values <- rbind(
   value_row("tau", tau),
   do.call(rbind, lapply(seq_along(moderators), function(i)
     value_row(unname(mod_labels[moderators[i]]), mod_est[i, ]))),
-  value_row("BP1 (non-OECD/Europe)", bp1$values[c("est", "lo", "hi")],
+  value_row("BP1 (Other Regions)", bp1$values[c("est", "lo", "hi")],
             unname(bp1$values[c("pi_lo", "pi_hi")])),
   value_row("BP2 (OECD/Europe)", bp2$values[c("est", "lo", "hi")],
             unname(bp2$values[c("pi_lo", "pi_hi")]))
@@ -378,7 +379,7 @@ values$Replications <- c(rep(n_boot(fm), 4 + length(moderators)),
 # ---- Save -------------------------------------------------------------------------
 write_xlsx(list(Summary                 = summary_tbl,
                 Moderators              = moderator_tbl,
-                "BP1 - Non-OECD Europe" = bp1$display,
+                "BP1 - Other Regions" = bp1$display,
                 "BP2 - OECD Europe"     = bp2$display,
                 Notes                   = notes_sheet,
                 Values                  = values),
@@ -386,7 +387,7 @@ write_xlsx(list(Summary                 = summary_tbl,
 
 print(summary_tbl, row.names = FALSE)
 print(moderator_tbl, row.names = FALSE)
-cat("\nBP1 (non-OECD/Europe):\n"); print(bp1$display, row.names = FALSE)
+cat("\nBP1 (Other Regions):\n"); print(bp1$display, row.names = FALSE)
 cat("\nBP2 (OECD/Europe):\n");     print(bp2$display, row.names = FALSE)
 cat(sprintf("\nSaved Table_Selection_MetaReg.xlsx. Run time: %.1f seconds.\n",
             (proc.time() - start_time)["elapsed"]))

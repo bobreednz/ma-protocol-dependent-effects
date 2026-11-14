@@ -45,11 +45,12 @@
 start_time <- proc.time()   # record start time so run time can be reported
 
 # ---- Settings ------------------------------------------------------------------
-refit <- FALSE   # TRUE refits both models with the bootstrap (slow); FALSE loads saved fits
+refit <- FALSE  # TRUE refits both models with the bootstrap (slow); FALSE loads saved fits
 
 # ---- Packages ----------------------------------------------------------------
 # metaselection is on CRAN (version 0.3.0 or later). The results reported in
-# the protocol were produced with development version 0.1.5.
+# the protocol were produced with development version 0.1.5 and reproduced
+# exactly with CRAN version 0.3.0 (refit on 2026-11-14).
 packages <- c("here", "metaselection", "future", "progressr", "writexl")
 installed <- packages %in% installed.packages()[, "Package"]
 if (any(!installed)) install.packages(packages[!installed])
@@ -120,13 +121,13 @@ print(mod_3psm)
 print(mod_4psm)
 
 # ---- Extract estimates ---------------------------------------------------------
-# print() with trans_gamma/transf_zeta returns a table with lambda and tau^2
+# print() with transf_gamma/transf_zeta returns a table with lambda and tau^2
 # on their natural scales. Columns: param, Est, SE, CI_lo, CI_hi,
 # percentile_lower, percentile_upper.
 param_table <- function(mod) {
   res <- NULL
   # capture.output() stops the table being printed again each time it is used
-  invisible(capture.output(res <- print(mod, trans_gamma = TRUE, transf_zeta = TRUE)))
+  invisible(capture.output(res <- print(mod, transf_gamma = TRUE, transf_zeta = TRUE)))
   res
 }
 get_param <- function(res, name) {

@@ -3,7 +3,7 @@
 # =============================================================================
 # Purpose: z-plot for the intercept-only CHE RoBMA model (Section 6).
 #
-# The z-plot (Bartos and Schimmack, 2025) shows the histogram of the observed
+# The z-plot (Bartos and Schimmack, 2026) shows the histogram of the observed
 # z-statistics (each estimate divided by its standard error) together with the
 # distribution of z-statistics implied by the fitted RoBMA model. It serves
 # two purposes in the protocol:

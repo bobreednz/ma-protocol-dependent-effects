@@ -13,11 +13,11 @@
 # The script fits no models. It reads the output files written by the
 # scripts of Sections 5 to 7, so run those first:
 #   Table_Diagnostics.xlsx          (Protocol_Diagnostics.R, sheet InterceptOnly)
-#   Table_CHE_PETPEESE_MetaReg.xlsx (Protocol_CHE_PETPEESE_MetaReg.R; Section 7.1)
-#   Table_CHE_PETPEESE_BestPractice.xlsx            (Protocol_CHE_PETPEESE_BestPractice.R; Section 7.1)
-#   Table_Selection_MetaReg.xlsx    (Protocol_Selection_MetaReg.R; Section 7.2)
-#   Table_RoBMA_CHE_MetaReg.xlsx    (Protocol_RoBMA_CHE_MetaReg.R; Section 7.3)
-# The selection model (3PSM or 4PSM) is the one used in Section 7.2.
+#   Table_CHE_PETPEESE_MetaReg.xlsx (Protocol_CHE_PETPEESE_MetaReg.R; Section 7.2)
+#   Table_CHE_PETPEESE_BestPractice.xlsx            (Protocol_CHE_PETPEESE_BestPractice.R; Section 7.2)
+#   Table_Selection_MetaReg.xlsx    (Protocol_Selection_MetaReg.R; Section 7.3)
+#   Table_RoBMA_CHE_MetaReg.xlsx    (Protocol_RoBMA_CHE_MetaReg.R; Section 7.4)
+# The selection model (3PSM or 4PSM) is the one used in Section 7.3.
 #
 # Output: Table_Sensitivity.xlsx
 #   "Summary"  the formatted table
@@ -54,7 +54,7 @@ io_row <- function(pattern, approach = NULL) {
   c(est = as.numeric(r$Mean), lo = ci[1], hi = ci[2])
 }
 
-# ---- Selection model used in Section 7.2 ---------------------------------------
+# ---- Selection model used in Section 7.3 ---------------------------------------
 sel_vals <- read_excel(here("Table_Selection_MetaReg.xlsx"), sheet = "Values")
 psm      <- sel_vals$Model[1]                       # "3PSM" or "4PSM"
 sel_row  <- function(q) {
@@ -62,7 +62,7 @@ sel_row  <- function(q) {
   c(est = r$Estimate, lo = r$Lower, hi = r$Upper, pi_lo = r$PI_lower, pi_hi = r$PI_upper)
 }
 
-# ---- CHE-PET-PEESE (Section 7.1) ------------------------------------------------
+# ---- CHE-PET-PEESE (Section 7.2) ------------------------------------------------
 pet_vals <- read_excel(here("Table_CHE_PETPEESE_MetaReg.xlsx"), sheet = "Values")
 pet_avg  <- pet_vals[pet_vals$Quantity == "Mean effect" & pet_vals$Selected, ]
 # Table_CHE_PETPEESE_BestPractice.xlsx stores formatted text; read the Fisher's z row of each panel
@@ -72,7 +72,7 @@ pet_bp <- function(sheet) {
   c(est = num(r$`Mean Prediction`)[1], lo = ci[1], hi = ci[2], pi_lo = pi[1], pi_hi = pi[2])
 }
 
-# ---- RoBMA (Section 7.3) ---------------------------------------------------------
+# ---- RoBMA (Section 7.4) ---------------------------------------------------------
 rob_vals <- read_excel(here("Table_RoBMA_CHE_MetaReg.xlsx"), sheet = "Values")
 rob_row  <- function(q) {
   r <- rob_vals[rob_vals$Quantity == q, ]
@@ -84,17 +84,17 @@ corr <- list(
   "CHE-PET-PEESE" = list(
     before = io_row("^CHE[- ]PET-PEESE"),
     avg    = c(est = pet_avg$Estimate, lo = pet_avg$Lower, hi = pet_avg$Upper),
-    bp1    = pet_bp("BP1 - Non-OECD Europe"),
+    bp1    = pet_bp("BP1 - Other Regions"),
     bp2    = pet_bp("BP2 - OECD Europe")),
   "Selection model" = list(
     before = io_row(paste0("^", psm, "$")),
     avg    = sel_row("Corrected mean"),
-    bp1    = sel_row("BP1 (non-OECD/Europe)"),
+    bp1    = sel_row("BP1 (Other Regions)"),
     bp2    = sel_row("BP2 (OECD/Europe)")),
   "RoBMA" = list(
     before = io_row("^Model-averaged$", approach = "RoBMA"),
     avg    = rob_row("RoBMA mean at average characteristics"),
-    bp1    = rob_row("RoBMA BP1 (non-OECD/Europe)"),
+    bp1    = rob_row("RoBMA BP1 (Other Regions)"),
     bp2    = rob_row("RoBMA BP2 (OECD/Europe)"))
 )
 
@@ -111,7 +111,7 @@ column <- function(x) c(
 summary_tbl <- data.frame(
   Estimate = c("Mean before moderators (Section 5)", "95% interval",
                "Mean at average characteristics (Section 7)", "95% interval",
-               "Best practice: non-OECD/Europe", "95% interval", "95% prediction interval",
+               "Best practice: Other Regions", "95% interval", "95% prediction interval",
                "Best practice: OECD/Europe", "95% interval", "95% prediction interval"),
   stringsAsFactors = FALSE)
 for (i in seq_along(corr)) summary_tbl[[headings[i]]] <- column(corr[[i]])

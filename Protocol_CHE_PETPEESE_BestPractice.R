@@ -5,7 +5,7 @@ start_time <- proc.time()
 # Install and load required packages
 # ============================================================
 
-packages <- c("here", "metafor", "clubSandwich", "tidyverse", "writexl")
+packages <- c("here", "metafor", "clubSandwich", "tidyverse", "writexl", "readxl")
 
 installed <- packages %in% installed.packages()[, "Package"]
 if (any(!installed)) install.packages(packages[!installed])
@@ -15,6 +15,7 @@ library(metafor)       # meta-analytic models via rma.mv()
 library(clubSandwich)  # CR2 clustered standard errors
 library(tidyverse)     # data manipulation
 library(writexl)       # export to Excel
+library(readxl)        # read the PET-PEESE choice from the meta-regression output
 
 # ============================================================
 # Load data
@@ -45,7 +46,7 @@ V_mat <- vcalc(
 #
 #   - Reports effects for economic growth rates (not GDP levels)
 #   - Uses cognitive social capital
-#   - Has no publication bias (se(z) = 0)
+#   - Has perfect precision (se(z) = 0), the PET-PEESE correction for publication bias
 #   - Is a published article
 #   - Does not use lagged DV or lagged SC
 #   - Includes only one social capital variable
@@ -55,7 +56,7 @@ V_mat <- vcalc(
 #   - Is published in the sample's mean publication year
 #
 # The two scenarios differ only in region:
-#   BP#1: Non-OECD/Europe (all region dummies = 0)
+#   BP#1: Other Regions (all region dummies = 0)
 #   BP#2: OECD/Europe    (Reg_OECDEurope = 1)
 #
 # PubYear is set to the sample mean (continuous variable).
@@ -131,23 +132,34 @@ center_at_bp <- function(data, Reg_OECDEurope_bp) {
 }
 
 # Create two centered datasets
-DT_bp1 <- center_at_bp(DT, Reg_OECDEurope_bp = 0)   # BP#1: non-OECD/Europe
+DT_bp1 <- center_at_bp(DT, Reg_OECDEurope_bp = 0)   # BP#1: Other Regions
 DT_bp2 <- center_at_bp(DT, Reg_OECDEurope_bp = 1)   # BP#2: OECD/Europe
 
 # ============================================================
 # Model formula
 #
-# Same 19 regressors as the CHE-PET meta-regression in Section 7.1, but now
+# Same 19 regressors as the CHE-PET meta-regression in Section 7.2, but now
 # using the centered variables. Because sez_c = sez (best
 # practice sez = 0), and centering does not change sampling
 # variances, V = sez^2 still holds.
 # ============================================================
 
-formula_bp <- z ~ 1 + sez_c +
-  SC1_Cognitive_c + SC1_Structural_c + DV_GrowthRate_c +
-  PubYear_c + Published_c + LaggedDV_c + LaggedSC_c + NumberSCVars_c +
-  Endog_IV_c + Endog_FE_c + CityLevel_c + RegionLevel_c + CountryLevel_c +
-  PanelData_c + Reg_OECDEurope_c + Reg_US_c + Reg_Africa_c + Reg_Asia_c
+# The bias term follows the PET-PEESE rule applied in the meta-regression
+# (Protocol_CHE_PETPEESE_MetaReg.R, which must be run first): the standard
+# error for CHE-PET, its square for CHE-PEESE. Either way it is zero at best
+# practice, so the intercept is the prediction.
+mr_values  <- read_excel(here("Table_CHE_PETPEESE_MetaReg.xlsx"), sheet = "Values")
+bias_model <- unique(mr_values$Model[mr_values$Selected])   # "CHE-PET" or "CHE-PEESE"
+stopifnot(length(bias_model) == 1, bias_model %in% c("CHE-PET", "CHE-PEESE"))
+bias_term  <- if (bias_model == "CHE-PEESE") "I(sez_c^2)" else "sez_c"
+cat(sprintf("Bias term from the meta-regression: %s (%s)\n", bias_model, bias_term))
+
+formula_bp <- as.formula(paste(
+  "z ~ 1 +", bias_term, "+",
+  "SC1_Cognitive_c + SC1_Structural_c + DV_GrowthRate_c +",
+  "PubYear_c + Published_c + LaggedDV_c + LaggedSC_c + NumberSCVars_c +",
+  "Endog_IV_c + Endog_FE_c + CityLevel_c + RegionLevel_c + CountryLevel_c +",
+  "PanelData_c + Reg_OECDEurope_c + Reg_US_c + Reg_Africa_c + Reg_Asia_c"))
 
 # ============================================================
 # Helper functions
@@ -176,7 +188,7 @@ fmt_interval <- function(lo, hi) {
 #
 # Only CHE is fit here. CHE was established as the preferred
 # estimator in the Section 4 Decision Point and is the model
-# used for the CHE-PET meta-regression in Section 7.1. This
+# used for the CHE-PET meta-regression in Section 7.2. This
 # script applies that same model to the best-practice covariate
 # values; unlike Table 4, this is not an estimator-comparison
 # step.
@@ -292,12 +304,12 @@ build_bp_panel <- function(DT_bp) {
 # ============================================================
 # Build tables for both best practice scenarios
 #
-# BP#1 (non-OECD/Europe) is listed first throughout the protocol
-# (this table and its RoBMA counterpart in Section 7.3), so that order is
+# BP#1 (Other Regions) is listed first throughout the protocol
+# (this table and its RoBMA counterpart in Section 7.4), so that order is
 # preserved here.
 # ============================================================
 
-cat("Fitting CHE model for Best Practice #1 (non-OECD/Europe)...\n")
+cat("Fitting CHE model for Best Practice #1 (Other Regions)...\n")
 panel_bp1 <- build_bp_panel(DT_bp1)
 
 cat("Fitting CHE model for Best Practice #2 (OECD/Europe)...\n")
@@ -318,7 +330,7 @@ panel_bp2 <- build_bp_panel(DT_bp2)
 
 bp_note <- function(Reg_OECDEurope_bp) {
   paste0(
-    "\"Best Practice\" predictions are derived from the CHE-PET meta-regression with 18 moderators (Section 7.1). ",
+    "\"Best Practice\" predictions are derived from the ", bias_model, " meta-regression with 18 moderators (Section 7.2). ",
     "Predictions are evaluated at se(z) = 0, SC1_Cognitive = 1, SC1_Structural = 0, ",
     "SC1_Other = 0 (reference), DV_GrowthRate = 1, DV_GDPLevel = 0 (reference), PubYear = ",
     round(bp_PubYear, 1), " (sample mean), Published = 1, LaggedDV = 0, LaggedSC = 0, NumberSCVars = ",
@@ -336,7 +348,7 @@ cat("\nBP#1 note:\n", note_bp1, "\n")
 cat("\nBP#2 note:\n", note_bp2, "\n")
 
 notes_sheet <- tibble(
-  Scenario = c("BP1 - Non-OECD/Europe", "BP2 - OECD/Europe"),
+  Scenario = c("BP1 - Other Regions", "BP2 - OECD/Europe"),
   Note     = c(note_bp1, note_bp2)
 )
 
@@ -346,7 +358,7 @@ notes_sheet <- tibble(
 
 write_xlsx(
   list(
-    "BP1 - Non-OECD Europe" = panel_bp1,
+    "BP1 - Other Regions" = panel_bp1,
     "BP2 - OECD Europe"     = panel_bp2,
     "Notes"                 = notes_sheet
   ),

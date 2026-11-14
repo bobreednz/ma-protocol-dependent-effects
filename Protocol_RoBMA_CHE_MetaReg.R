@@ -2,7 +2,7 @@
 # Protocol_RoBMA_CHE_MetaReg.R
 # =============================================================================
 # Purpose: RoBMA with the 18 moderators, and its best-practice predictions
-# (Section 7.3).
+# (Section 7.4).
 #
 #   RoBMA.mv: the CHE RoBMA of Section 5.4 with the 18 moderators in the mean.
 #             RoBMA averages over models with and without each moderator, so
@@ -74,7 +74,7 @@
 #     "Moderators"            inclusion Bayes factors and model-averaged
 #                             coefficients (RoBMA), inclusion Bayes factors (BMA)
 #     "SelectionWeights"      RoBMA selection weights and PET/PEESE
-#     "BP1 - Non-OECD Europe" best-practice prediction, Fisher's z and PCC
+#     "BP1 - Other Regions" best-practice prediction, Fisher's z and PCC
 #     "BP2 - OECD Europe"     the same for OECD/Europe
 #     "Notes"                 the best-practice values, one note per scenario
 #     "Convergence"           ESS and R-hat for every reported parameter
@@ -156,7 +156,7 @@ if (refit || !file.exists(rob_file) || !file.exists(bma_file)) {
   fit_rob <- RoBMA.mv(
     yi = yi, V = V_mat, measure = "ZCOR",
     mods = mod_formula,
-    set_contrast_factor_predictors = "treatment",   # dummy coding, as in 8.1 and 8.2
+    set_contrast_factor_predictors = "treatment",   # dummy coding, as in 7.2 and 7.3
     random = ~ 1 | newid/obs,                       # study and estimate random effects
     sample = 5000, burnin = 5000, adapt = 5000, thin = 3,
     parallel = TRUE, seed = 1, data = dat)
@@ -323,7 +323,7 @@ sel_tbl <- do.call(rbind, lapply(rownames(bias_rob), function(rn) {
 }))
 
 # ---- Sheets 4 and 5: best-practice predictions -------------------------------
-# Same best-practice values as Protocol_CHE_PETPEESE_BestPractice.R. BP1 = non-OECD/Europe (all
+# Same best-practice values as Protocol_CHE_PETPEESE_BestPractice.R. BP1 = Other Regions (all
 # region dummies 0); BP2 = OECD/Europe. Factor levels are copied from the data
 # so that predict() codes the new data exactly as the fitted model does.
 make_bp <- function(oecd) {
@@ -363,7 +363,7 @@ bp2 <- bp_panel(1)
 
 bp_note <- function(oecd) {
   paste0(
-    "\"Best Practice\" predictions are derived from the RoBMA meta-regression with 18 moderators (Section 7.3). ",
+    "\"Best Practice\" predictions are derived from the RoBMA meta-regression with 18 moderators (Section 7.4). ",
     "Predictions are evaluated at SC1_Cognitive = 1, SC1_Structural = 0, ",
     "SC1_Other = 0 (reference), DV_GrowthRate = 1, DV_GDPLevel = 0 (reference), PubYear = ",
     round(mean(dat$PubYear), 1), " (sample mean), Published = 1, LaggedDV = 0, ",
@@ -374,7 +374,7 @@ bp_note <- function(oecd) {
     "The prediction interval is the range of true effects at these values; it does not include sampling error."
   )
 }
-notes_sheet <- data.frame(Scenario = c("BP1 - Non-OECD/Europe", "BP2 - OECD/Europe"),
+notes_sheet <- data.frame(Scenario = c("BP1 - Other Regions", "BP2 - OECD/Europe"),
                           Note = c(bp_note(0), bp_note(1)), stringsAsFactors = FALSE)
 
 # ---- Sheet 6: Convergence ----------------------------------------------------
@@ -406,7 +406,7 @@ v <- function(q, p, pi = c(NA, NA)) data.frame(
 values <- rbind(
   v("RoBMA mean at average characteristics", pe_rob),
   v("BMA mean at average characteristics",   pe_bma),
-  v("RoBMA BP1 (non-OECD/Europe)", bp1$values, bp1$values[c("pi_lo", "pi_hi")]),
+  v("RoBMA BP1 (Other Regions)", bp1$values, bp1$values[c("pi_lo", "pi_hi")]),
   v("RoBMA BP2 (OECD/Europe)",     bp2$values, bp2$values[c("pi_lo", "pi_hi")])
 )
 
@@ -414,7 +414,7 @@ values <- rbind(
 write_xlsx(list(Summary                 = summary_tbl,
                 Moderators              = moderator_tbl,
                 SelectionWeights        = sel_tbl,
-                "BP1 - Non-OECD Europe" = bp1$display,
+                "BP1 - Other Regions" = bp1$display,
                 "BP2 - OECD Europe"     = bp2$display,
                 Notes                   = notes_sheet,
                 Convergence             = convergence,
@@ -424,7 +424,7 @@ write_xlsx(list(Summary                 = summary_tbl,
 print(summary_tbl, row.names = FALSE)
 print(moderator_tbl, row.names = FALSE)
 print(sel_tbl, row.names = FALSE)
-cat("\nBP1 (non-OECD/Europe):\n"); print(bp1$display, row.names = FALSE)
+cat("\nBP1 (Other Regions):\n"); print(bp1$display, row.names = FALSE)
 cat("\nBP2 (OECD/Europe):\n");     print(bp2$display, row.names = FALSE)
 cat("\nParameters below the convergence criteria:\n")
 print(convergence[!convergence$Meets_criteria, ], row.names = FALSE)

@@ -79,7 +79,7 @@ model_CE <- rma.mv(z ~ 1,
 
 # HE: Hierarchical effects model
 # Two variance components: between-study (tau (study)) and
-# within-study (tau (estimate)). Effect sizes are treated as
+# within-study (tau (estimate)). Sampling errors are treated as
 # independent (diagonal V matrix).
 model_HE <- rma.mv(z ~ 1,
                    V      = sez^2,
@@ -146,13 +146,14 @@ ct_CHE <- coef_test(model_CHE, cluster = DT$newid, vcov = "CR2")
 #
 # We test three nested pairs:
 #   (1) RE vs FE: does adding a random effect improve fit?
-#   (2) HE vs RE: does a second variance component help?
-#   (3) CHE vs CE: does a second variance component help
-#       when within-study correlation is already modeled?
+#   (2) HE vs RE: does a study-level variance component help?
+#   (3) CHE vs CE: does a within-study variance component help
+#       when correlated sampling errors are already modeled?
 #
-# CE and HE are not nested with each other (both have one
-# variance component but different structures), so no LR
-# test is possible between them. Similarly, HE and CHE use
+# CE and HE are not nested with each other (CE has one
+# variance component and correlated sampling errors; HE has
+# two variance components and independent sampling errors), so
+# no LR test is possible between them. Similarly, HE and CHE use
 # different covariance matrices (diagonal vs. imputed
 # block-diagonal), so no LR test is possible. The choice
 # between HE and CHE is a choice about the assumed within-study
@@ -201,7 +202,7 @@ fmt_se <- function(ct) {
 
 # Format a 95% confidence interval, using the Satterthwaite df
 # from coef_test() -- the same construction used for the
-# best-practice intervals in Section 7.1, so that every confidence
+# best-practice intervals in Section 7.2, so that every confidence
 # interval in the protocol is built the same way.
 fmt_ci <- function(ct) {
   t_crit <- qt(0.975, df = ct$df_Satt)
@@ -215,7 +216,7 @@ fmt_ci <- function(ct) {
 # variance (the sum of the model's variance components) to the squared
 # CR2 standard error, and uses the same Satterthwaite df as the
 # confidence interval. This is the construction used for the
-# best-practice prediction intervals in Section 7.1. The interval
+# best-practice prediction intervals in Section 7.2. The interval
 # describes the range of true effects; it does not include the
 # sampling error of a new estimate.
 fmt_pi <- function(ct, sigma2_total) {
