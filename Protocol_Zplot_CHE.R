@@ -39,7 +39,9 @@ par(mar = c(4, 4, 0, 0))
 zplot(fit_rob, by.hist = 0.25, plot_extrapolation = FALSE, from = -4, to = 8)
 
 # Copy the plot already on screen to a PNG. This avoids recomputing it.
-dev.copy(png, here("Figure_Zplot_CHE.png"), width = 800, height = 600, res = 120)
+# 2400 x 1800 pixels at 360 dpi gives a print-quality figure (the paper's
+# Figure 3) with the same layout and font sizes as an 800 x 600 plot at 120 dpi.
+dev.copy(png, here("Figure_Zplot_CHE.png"), width = 2400, height = 1800, res = 360)
 dev.off()
 cat("Saved Figure_Zplot_CHE.png\n")
 

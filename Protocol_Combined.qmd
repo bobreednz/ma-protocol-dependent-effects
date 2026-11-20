@@ -460,7 +460,7 @@ $$T_{ij} = \beta_0 + \beta_1 \cdot \text{SE}_{ij} + u_j + v_{ij} + e_{ij},$$
 
 where $T_{ij}$ is effect size estimate $i$ from study $j$ and $\text{SE}_{ij}$ is its standard error. The slope coefficient $\hat{\beta}_1$ is the FAT test: a significantly positive estimate indicates that larger effects are observed precisely where standard errors are larger, which is consistent with selective reporting of significant results. The intercept $\hat{\beta}_0$ is the PET estimator of the mean effect net of bias. It is the predicted effect size for a hypothetical study with a standard error of zero, that is, a study of infinite precision.
 
-The precision-effect estimate with standard error (PEESE) replaces $\text{SE}_{ij}$ with its square. Stanley and Doucouliagos (2014) show that PET underestimates the mean effect when a genuine effect is present, and that PEESE's quadratic correction is then more appropriate. The PET-PEESE rule therefore reports PET unless the PET intercept is positive and statistically significant, in which case it reports PEESE. Following Chen and Pustejovsky (2026), this protocol treats the intercept as significant when its two-sided p-value is below 0.10, which is a one-sided test at the 5 percent level.
+The precision-effect estimate with standard error (PEESE) replaces $\text{SE}_{ij}$ with its square. Stanley and Doucouliagos (2014) show that PET underestimates the mean effect when a genuine effect is present, and that PEESE's quadratic correction is then more appropriate. The PET-PEESE rule therefore reports PET unless the PET intercept is positive and statistically significant, in which case it reports PEESE. This protocol treats the intercept as significant when its two-sided p-value is below 0.10, which is a one-sided test at the 5 percent level. Stanley (2017) recommends a more lenient threshold, a one-sided test at the 10 percent level (a two-sided p-value below 0.20). Researchers who prefer that rule can change the threshold in `Protocol_CHE_PETPEESE_MetaReg.R`, where the rule is applied automatically (`use_peese`), and apply it by hand to @tbl-peese.
 
 In the dependent-effects context, both regressions are estimated using `rma.mv()` with the full CHE variance structure and CR2 standard errors, following Rodgers and Pustejovsky (2021) and Chen and Pustejovsky (2026). This extends the conventional Egger regression to the multivariate setting without abandoning the dependence structure.
 
@@ -511,7 +511,7 @@ Then turn to the intercept, the "Effect beyond bias" row. It estimates the mean 
 
 **Decision point.** Apply the PET-PEESE rule. Use the CHE-PET intercept as the corrected mean effect unless it is positive and statistically significant (two-sided p < 0.10), in which case use the CHE-PEESE intercept in @tbl-peese. Report @tbl-peese in either case, for transparency.
 
-**In this example.** The CHE FAT slope is large and highly significant (1.575, SE = 0.252). The CHE-PET intercept is 0.028, with a 95% confidence interval of [-0.014, 0.070]. That is a reduction of 84 percent from the uncorrected CHE mean of 0.175 (@tbl-table4), and the interval includes zero. Because the CHE-PET intercept is not statistically significant, PET is retained as the PET-PEESE estimate. The CHE-PEESE intercept of 0.102 in @tbl-peese is reported for transparency only.
+**In this example.** The CHE FAT slope is 1.575 (p < 0.001). This is strong evidence of small-study effects. The CHE-PET intercept is 0.028, with a 95% confidence interval of [-0.014, 0.070]. That is a reduction of 84 percent from the uncorrected CHE mean of 0.175 (@tbl-table4), and the interval includes zero. Because the CHE-PET intercept is not statistically significant, PET is retained as the PET-PEESE estimate. The choice of threshold matters here. Under Stanley's (2017) one-sided 10 percent rule, the intercept (one-sided p = 0.088) would be significant, and the PEESE estimate of 0.102 would be reported instead. At the meta-regression stage (@sec-mr-petpeese), the one-sided p-value is 0.102, so PET is retained under either rule. The CHE-PEESE intercept of 0.102 in @tbl-peese is reported for transparency only.
 
 ### Robustness check: CHE-ISCW-PET-PEESE
 
@@ -1230,6 +1230,8 @@ Pustejovsky, J. E., and E. Tipton. 2022. "Meta-Analysis with Robust Variance Est
 Rodgers, M. A., and J. E. Pustejovsky. 2021. "Evaluating Meta-Analytic Methods to Detect Selective Reporting in the Presence of Dependent Effect Sizes." *Psychological Methods* 26: 141--160. https://doi.org/10.1037/met0000300.
 
 Simmons, J. P., L. D. Nelson, and U. Simonsohn. 2011. "False-Positive Psychology: Undisclosed Flexibility in Data Collection and Analysis Allows Presenting Anything as Significant." *Psychological Science* 22(11): 1359--1366. https://doi.org/10.1177/0956797611417632.
+
+Stanley, T. D. 2017. "Limitations of PET-PEESE and Other Meta-Analysis Methods." *Social Psychological and Personality Science* 8(5): 581--591. https://doi.org/10.1177/1948550617693062.
 
 Stanley, T. D., and H. Doucouliagos. 2014. "Meta-Regression Approximations to Reduce Publication Selection Bias." *Research Synthesis Methods* 5: 60--78. https://doi.org/10.1002/jrsm.1095.
 
